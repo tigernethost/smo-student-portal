@@ -53,3 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/quiz/history',                [QuizController::class, 'history']);
     Route::get('/quiz/{sessionId}/results',    [QuizController::class, 'results']);
 });
+
+// Facebook data deletion callback (required by Facebook Platform Policy)
+Route::post('/auth/facebook/deletion', [App\Http\Controllers\DataDeletionController::class, 'facebookDeletion']);
+Route::get('/deletion-status',         [App\Http\Controllers\DataDeletionController::class, 'deletionStatus']);
