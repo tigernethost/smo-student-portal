@@ -82,7 +82,8 @@ Route::get('/deletion-status',         [App\Http\Controllers\DataDeletionControl
 // One-time setup endpoint (protected by secret key)
 Route::post('/setup/seed', function() {
     $secret = request()->header('X-Setup-Key');
-    if ($secret !== env('SETUP_SECRET', '')) {
+    $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
+    if ($secret !== $allowed) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
     try {
