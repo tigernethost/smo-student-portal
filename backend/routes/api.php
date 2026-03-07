@@ -24,6 +24,7 @@ Route::get('/subjects', [StudentController::class, 'availableSubjects']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/student/profile',  [StudentController::class, 'profile']);
     Route::put('/student/profile',  [StudentController::class, 'updateProfile']);
+    Route::post('/student/profile',  [StudentController::class, 'updateProfile']); // FormData from onboarding
 
     Route::get('/student/dashboard',        [StudentController::class, 'dashboard']);
     Route::get('/student/analytics',        [StudentController::class, 'analytics']);

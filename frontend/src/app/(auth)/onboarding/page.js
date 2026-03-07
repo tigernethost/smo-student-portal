@@ -109,7 +109,7 @@ export default function OnboardingPage() {
       fd.append('onboarding_done', 'true')
       if (avatarFile) fd.append('avatar', avatarFile)
 
-      await fetch('/api/student/profile', { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: fd })
+      await fetch('/api/student/profile', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
 
       setWelcomeData({
         name,
