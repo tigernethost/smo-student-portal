@@ -1,3 +1,4 @@
+'use client'
 import Link from 'next/link'
 
 // Mock data - will be replaced with API calls
