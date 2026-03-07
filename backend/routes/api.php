@@ -78,3 +78,23 @@ Route::middleware('auth:sanctum')->group(function () {
 // Facebook data deletion callback (required by Facebook Platform Policy)
 Route::post('/auth/facebook/deletion', [App\Http\Controllers\DataDeletionController::class, 'facebookDeletion']);
 Route::get('/deletion-status',         [App\Http\Controllers\DataDeletionController::class, 'deletionStatus']);
+
+// One-time setup endpoint (protected by secret key)
+Route::post('/setup/seed', function() {
+    $secret = request()->header('X-Setup-Key');
+    if ($secret !== env('SETUP_SECRET', '')) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    try {
+        \Artisan::call('db:seed', ['--force' => true]);
+        $output = \Artisan::output();
+        return response()->json([
+            'message' => 'Seeded successfully',
+            'output' => $output,
+            'subjects' => \DB::table('subjects')->count(),
+            'topics' => \DB::table('topics')->count(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
