@@ -25,14 +25,32 @@ class StudentController extends Controller
     public function updateProfile(Request $request)
     {
         $request->validate([
-            'grade_level' => 'nullable|integer|min:7|max:12',
-            'strand' => 'nullable|string',
-            'school_name' => 'nullable|string|max:255',
-            'subject_ids' => 'nullable|array',
-            'subject_ids.*' => 'exists:subjects,id',
+            'name'               => 'nullable|string|max:255',
+            'grade_level'        => 'nullable|integer|min:7|max:12',
+            'strand'             => 'nullable|string',
+            'school_name'        => 'nullable|string|max:255',
+            'learning_goal'      => 'nullable|string|max:255',
+            'learning_challenge' => 'nullable|string|max:255',
+            'subject_ids'        => 'nullable|array',
+            'subject_ids.*'      => 'exists:subjects,id',
+            'avatar'             => 'nullable|image|max:4096',
+            'onboarding_done'    => 'nullable|boolean',
         ]);
+
         $user = $request->user();
-        $user->update($request->only(['grade_level','strand','school_name']));
+        $fields = array_filter(
+            $request->only(['name','grade_level','strand','school_name','learning_goal','learning_challenge']),
+            fn($v) => $v !== null
+        );
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $fields['avatar_url'] = '/storage/' . $path;
+        }
+
+        if (!empty($fields)) $user->update($fields);
+
         if ($request->has('subject_ids')) {
             StudentSubject::where('user_id',$user->id)->update(['is_active'=>false]);
             foreach ($request->subject_ids as $sid) {
@@ -47,8 +65,12 @@ class StudentController extends Controller
                     );
                 }
             }
-            $user->update(['onboarding_done'=>true]);
         }
+
+        if ($request->boolean('onboarding_done')) {
+            $user->update(['onboarding_done' => true]);
+        }
+
         return response()->json(['message'=>'Profile updated','user'=>$user->fresh()]);
     }
 
