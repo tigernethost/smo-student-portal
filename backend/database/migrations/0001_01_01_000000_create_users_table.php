@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
@@ -17,7 +14,24 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('student_id')->nullable()->unique();
+            $table->string('school_code')->nullable();
+            $table->string('grade')->nullable();
+            $table->string('section')->nullable();
+            $table->string('role')->default('student');
             $table->rememberToken();
+            $table->timestamps();
+        });
+
+        Schema::create('student_goals', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('subject');
+            $table->string('type')->default('grade');
+            $table->decimal('target', 5, 2);
+            $table->decimal('current', 5, 2)->default(0);
+            $table->string('deadline')->nullable();
+            $table->string('status')->default('on-track');
             $table->timestamps();
         });
 
@@ -37,11 +51,9 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
+        Schema::dropIfExists('student_goals');
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
