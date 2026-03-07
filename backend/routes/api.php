@@ -56,3 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/quiz/history', [QuizController::class, 'history']);
     Route::get('/quiz/{sessionId}/results', [QuizController::class, 'results']);
 });
+
+// Social Auth
+Route::get('/auth/redirect/{provider}',  [App\Http\Controllers\SocialAuthController::class, 'redirect']);
+Route::get('/auth/callback/{provider}',  [App\Http\Controllers\SocialAuthController::class, 'callback']);
