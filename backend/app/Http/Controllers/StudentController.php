@@ -23,6 +23,7 @@ class StudentController extends Controller
             'subjects_enrolled' => StudentSubject::where('user_id',$user->id)->where('is_active',true)->count(),
             'overall_score' => $snapshot?->overall_score ?? 0,
             'risk_level' => $snapshot?->risk_level ?? 'low',
+            'quota' => $this->quota->status($user),
         ]);
     }
 

@@ -21,13 +21,29 @@ export default function DashboardPage() {
   if (loading) return <LoadingSkeleton />
   if (!data) return <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>Could not load dashboard.</div>
 
-  const { overall_score, risk_level, total_quizzes, total_uploads, subjects, strengths, weaknesses, recommendations, ai_summary, recent_quizzes, recent_uploads, unread_notifications } = data
+  const { overall_score, risk_level, total_quizzes, total_uploads, subjects, strengths, weaknesses, recommendations, ai_summary, recent_quizzes, recent_uploads, unread_notifications, quota } = data
 
   const riskColor = risk_level === 'high' ? '#dc2626' : risk_level === 'medium' ? '#d97706' : '#16a34a'
   const card = { background: 'white', borderRadius: '16px', padding: '1.25rem', border: '1px solid #f3f4f6', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      {/* Quota warning banner */}
+      {quota && !quota.is_unlimited && quota.pct_used >= 80 && (
+        <div style={{ background: quota.pct_used >= 100 ? '#fef2f2' : '#fffbeb', border: `1px solid ${quota.pct_used >= 100 ? '#fca5a5' : '#fcd34d'}`, borderRadius: '12px', padding: '10px 16px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.1rem' }}>{quota.pct_used >= 100 ? '🚫' : '⚠️'}</span>
+            <span style={{ fontSize: '0.85rem', fontWeight: '600', color: quota.pct_used >= 100 ? '#dc2626' : '#92400e' }}>
+              {quota.pct_used >= 100
+                ? `You've used all ${quota.limit} AI actions for this month.`
+                : `You've used ${quota.used} of ${quota.limit} AI actions (${quota.pct_used}%). Running low!`}
+            </span>
+          </div>
+          <Link href="/upgrade" style={{ padding: '6px 14px', background: quota.pct_used >= 100 ? '#dc2626' : '#f59e0b', color: 'white', borderRadius: '8px', fontWeight: '700', fontSize: '0.78rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            ⚡ Upgrade →
+          </Link>
+        </div>
+      )}
       {/* Hero */}
       <div style={{ background: 'linear-gradient(135deg,#1e3a8a,#312e81)', borderRadius: '20px', padding: '1.5rem 2rem', color: 'white', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
