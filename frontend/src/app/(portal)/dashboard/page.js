@@ -1,296 +1,219 @@
 'use client'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-// Mock data - will be replaced with API calls
-const student = {
-  name: 'Juan dela Cruz',
-  grade: 8,
-  section: 'Sampaguita',
-  schoolYear: '2025-2026',
-  quarter: 3,
-  average: 87.4,
-  attendanceRate: 94.2,
-  rank: 3,
-  totalStudents: 42,
-}
+export default function DashboardPage() {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-const subjects = [
-  { id: 1, name: 'Mathematics', code: 'MATH8', teacher: 'Mr. Santos', avg: 92, trend: 'up', color: '#2563eb', icon: '📐' },
-  { id: 2, name: 'English', code: 'ENG8', teacher: 'Ms. Reyes', avg: 88, trend: 'stable', color: '#7c3aed', icon: '📖' },
-  { id: 3, name: 'Science', code: 'SCI8', teacher: 'Mr. Cruz', avg: 85, trend: 'up', color: '#059669', icon: '🔬' },
-  { id: 4, name: 'Filipino', code: 'FIL8', teacher: 'Ms. Garcia', avg: 90, trend: 'stable', color: '#d97706', icon: '🇵🇭' },
-  { id: 5, name: 'Araling Panlipunan', code: 'AP8', teacher: 'Mr. Dela Rosa', avg: 83, trend: 'down', color: '#dc2626', icon: '🌏' },
-  { id: 6, name: 'TLE', code: 'TLE8', teacher: 'Ms. Bautista', avg: 91, trend: 'up', color: '#0891b2', icon: '🔧' },
-]
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) { window.location.href = '/login'; return }
 
-const recommendations = [
-  { subject: 'Araling Panlipunan', topic: 'Southeast Asian History', priority: 'high', reason: 'Score dropped 5 points this quarter' },
-  { subject: 'Science', topic: 'Chemical Equations', priority: 'medium', reason: 'Nearing mastery threshold — push now!' },
-  { subject: 'Mathematics', topic: 'Quadratic Equations', priority: 'low', reason: 'Review to maintain your lead' },
-]
+    fetch('/api/student/dashboard', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json()).then(d => {
+      setData(d)
+      if (d.onboarding_done === false) window.location.href = '/onboarding'
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [])
 
-const recentActivity = [
-  { type: 'quiz', subject: 'Math', title: 'Quadratic Equations Quiz', score: 38, total: 40, date: '2 hours ago' },
-  { type: 'exam', subject: 'English', title: 'Quarter 3 Periodical', score: 85, total: 100, date: 'Yesterday' },
-  { type: 'quiz', subject: 'Science', title: 'Chemical Reactions Quiz', score: 17, total: 20, date: '3 days ago' },
-]
+  if (loading) return <LoadingSkeleton />
+  if (!data) return <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>Could not load dashboard.</div>
 
-function StatCard({ icon, label, value, sub, color = '#2563eb', bg = '#eff6ff' }) {
+  const { overall_score, risk_level, total_quizzes, total_uploads, subjects, strengths, weaknesses, recommendations, ai_summary, recent_quizzes, recent_uploads, unread_notifications } = data
+
+  const riskColor = risk_level === 'high' ? '#dc2626' : risk_level === 'medium' ? '#d97706' : '#16a34a'
+  const card = { background: 'white', borderRadius: '16px', padding: '1.25rem', border: '1px solid #f3f4f6', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }
+
   return (
-    <div style={{
-      background: 'white',
-      borderRadius: '16px',
-      padding: '1.25rem',
-      border: '1px solid #f3f4f6',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-      display: 'flex', flexDirection: 'column', gap: '0.5rem',
-    }}>
-      <div style={{
-        width: '40px', height: '40px', borderRadius: '10px',
-        background: bg, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', fontSize: '1.1rem',
-      }}>{icon}</div>
-      <div style={{ fontSize: '1.75rem', fontWeight: '800', color, lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#374151' }}>{label}</div>
-      {sub && <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{sub}</div>}
+    <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      {/* Hero */}
+      <div style={{ background: 'linear-gradient(135deg,#1e3a8a,#312e81)', borderRadius: '20px', padding: '1.5rem 2rem', color: 'white', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '4px' }}>Your Learning Dashboard</h1>
+          <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Upload exams & take AI quizzes to track your progress</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.875rem' }}>
+          <Link href="/upload" style={{ padding: '9px 18px', background: 'white', color: '#1e3a8a', borderRadius: '10px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '700' }}>📤 Upload</Link>
+          <Link href="/quiz" style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '10px', textDecoration: 'none', fontSize: '0.85rem', fontWeight: '700' }}>🧠 Quiz</Link>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+        {[
+          { icon: '📊', label: 'Overall Score', value: overall_score > 0 ? `${overall_score}%` : '—', sub: 'across all subjects', color: '#2563eb', bg: '#eff6ff' },
+          { icon: '🧠', label: 'Quizzes Taken', value: total_quizzes, sub: 'AI-generated quizzes', color: '#7c3aed', bg: '#f5f3ff' },
+          { icon: '📤', label: 'Documents', value: total_uploads, sub: 'uploaded & analyzed', color: '#059669', bg: '#f0fdf4' },
+          { icon: '🎯', label: 'Risk Level', value: risk_level.charAt(0).toUpperCase() + risk_level.slice(1), sub: 'current status', color: riskColor, bg: risk_level === 'high' ? '#fef2f2' : risk_level === 'medium' ? '#fffbeb' : '#f0fdf4' },
+        ].map(s => (
+          <div key={s.label} style={{ ...card }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', marginBottom: '0.75rem' }}>{s.icon}</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: s.color, lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: '600', color: '#374151', marginTop: '3px' }}>{s.label}</div>
+            <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '1.25rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* AI summary */}
+          {ai_summary ? (
+            <div style={{ ...card, background: 'linear-gradient(135deg,#eff6ff,#f5f3ff)', border: '1px solid #e0e7ff' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#2563eb', marginBottom: '8px' }}>🤖 AI LEARNING SUMMARY</div>
+              <p style={{ fontSize: '0.875rem', color: '#374151', lineHeight: 1.65, margin: 0 }}>{ai_summary}</p>
+            </div>
+          ) : total_quizzes === 0 && total_uploads === 0 ? (
+            <div style={{ ...card, background: 'linear-gradient(135deg,#fffff5,#fffbeb)', border: '1px solid #fde68a', textAlign: 'center', padding: '2rem' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🚀</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#111827', marginBottom: '6px' }}>Start your learning journey!</div>
+              <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '1.25rem' }}>Upload an exam or take a quiz to get your personalized AI analysis and track your progress.</p>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                <Link href="/upload" style={{ padding: '9px 20px', background: 'linear-gradient(135deg,#2563eb,#7c3aed)', color: 'white', borderRadius: '9px', textDecoration: 'none', fontSize: '0.875rem', fontWeight: '600' }}>📤 Upload an Exam</Link>
+                <Link href="/quiz" style={{ padding: '9px 20px', background: 'white', color: '#2563eb', border: '1.5px solid #2563eb', borderRadius: '9px', textDecoration: 'none', fontSize: '0.875rem', fontWeight: '600' }}>🧠 Take a Quiz</Link>
+              </div>
+            </div>
+          ) : null}
+
+          {/* My Subjects */}
+          {subjects?.length > 0 && (
+            <div style={card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.875rem' }}>
+                <h2 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#111827' }}>My Subjects</h2>
+                <Link href="/subjects" style={{ fontSize: '0.78rem', color: '#2563eb', textDecoration: 'none', fontWeight: '600' }}>View all →</Link>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.625rem' }}>
+                {subjects.map(s => (
+                  <div key={s.id} style={{ textAlign: 'center', padding: '0.875rem 0.5rem', borderRadius: '10px', border: '1px solid #f3f4f6', background: '#fafafa' }}>
+                    <div style={{ fontSize: '1.25rem', marginBottom: '4px' }}>{s.icon}</div>
+                    <div style={{ fontSize: '0.68rem', fontWeight: '600', color: '#374151', marginBottom: '3px', lineHeight: 1.2 }}>{s.name.split(' ')[0]}</div>
+                    {s.score != null ? (
+                      <div style={{ fontSize: '0.9rem', fontWeight: '800', color: s.score >= 85 ? '#16a34a' : s.score >= 70 ? '#d97706' : '#dc2626' }}>{s.score}%</div>
+                    ) : (
+                      <div style={{ fontSize: '0.65rem', color: '#9ca3af' }}>No data</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent activity */}
+          {(recent_quizzes?.length > 0 || recent_uploads?.length > 0) && (
+            <div style={card}>
+              <h2 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#111827', marginBottom: '0.875rem' }}>Recent Activity</h2>
+              {recent_uploads?.map(u => (
+                <div key={u.id} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '0.625rem 0', borderBottom: '1px solid #f9fafb' }}>
+                  <span style={{ fontSize: '1.1rem' }}>📤</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: '600', color: '#374151' }}>{u.type} uploaded{u.subject ? ` — ${u.subject}` : ''}</div>
+                    <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{u.date}</div>
+                  </div>
+                  {u.score != null && <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#2563eb' }}>{u.score}/{u.total}</div>}
+                  <span style={{ fontSize: '0.7rem', padding: '2px 7px', borderRadius: '5px', background: u.status === 'done' ? '#f0fdf4' : '#fffbeb', color: u.status === 'done' ? '#16a34a' : '#d97706', fontWeight: '600' }}>{u.status}</span>
+                </div>
+              ))}
+              {recent_quizzes?.map(q => (
+                <div key={q.id} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '0.625rem 0', borderBottom: '1px solid #f9fafb' }}>
+                  <span style={{ fontSize: '1.1rem' }}>🧠</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: '600', color: '#374151' }}>{q.topic || q.subject} Quiz</div>
+                    <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{q.date}</div>
+                  </div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '800', color: q.score_pct >= 85 ? '#16a34a' : q.score_pct >= 65 ? '#d97706' : '#dc2626' }}>{q.score_pct}%</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right panel */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          {/* Strengths */}
+          {strengths?.length > 0 && (
+            <div style={card}>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>💪 Strengths</h3>
+              {strengths.map((s, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f9fafb' }}>
+                  <div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#374151' }}>{s.topic_name}</div>
+                    <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>{s.subject_name}</div>
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#16a34a' }}>{s.score}%</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Weaknesses */}
+          {weaknesses?.length > 0 && (
+            <div style={card}>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>📖 Needs Practice</h3>
+              {weaknesses.map((w, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid #f9fafb' }}>
+                  <div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#374151' }}>{w.topic_name}</div>
+                    <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>{w.subject_name}</div>
+                  </div>
+                  {w.score != null && <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#dc2626' }}>{w.score}%</span>}
+                </div>
+              ))}
+              <Link href="/quiz" style={{ display: 'block', marginTop: '0.75rem', padding: '7px', background: '#eff6ff', color: '#2563eb', borderRadius: '8px', textDecoration: 'none', textAlign: 'center', fontSize: '0.78rem', fontWeight: '700' }}>
+                🧠 Practice These Topics
+              </Link>
+            </div>
+          )}
+
+          {/* Recommendations */}
+          {recommendations?.length > 0 && (
+            <div style={card}>
+              <h3 style={{ fontSize: '0.875rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>🎯 Next Steps</h3>
+              {recommendations.slice(0, 3).map((r, i) => (
+                <div key={i} style={{ padding: '7px 0', borderBottom: '1px solid #f9fafb' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#374151' }}>{r.topic_name}</div>
+                  <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>{r.subject_name}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Quick actions */}
+          <div style={card}>
+            <h3 style={{ fontSize: '0.875rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>Quick Actions</h3>
+            {[
+              { href: '/upload', icon: '📤', label: 'Upload Exam', desc: 'AI reads & analyzes', color: '#2563eb' },
+              { href: '/quiz', icon: '🧠', label: 'Take a Quiz', desc: 'Adaptive AI questions', color: '#7c3aed' },
+              { href: '/learning-path', icon: '🗺️', label: 'Learning Path', desc: 'View topic mastery', color: '#059669' },
+            ].map(a => (
+              <Link key={a.href} href={a.href} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '9px', marginBottom: '4px', textDecoration: 'none', border: '1px solid #f3f4f6', background: '#fafafa', transition: 'background 0.15s' }}>
+                <span style={{ fontSize: '1.1rem' }}>{a.icon}</span>
+                <div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: '600', color: a.color }}>{a.label}</div>
+                  <div style={{ fontSize: '0.68rem', color: '#9ca3af' }}>{a.desc}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
-function SubjectCard({ subject }) {
-  const trendIcon = subject.trend === 'up' ? '↑' : subject.trend === 'down' ? '↓' : '→'
-  const trendColor = subject.trend === 'up' ? '#16a34a' : subject.trend === 'down' ? '#dc2626' : '#6b7280'
-
+function LoadingSkeleton() {
+  const shimmer = { background: 'linear-gradient(90deg,#f3f4f6 25%,#e9ecef 50%,#f3f4f6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite', borderRadius: '8px' }
   return (
-    <Link href={`/subjects/${subject.id}`} style={{ textDecoration: 'none' }}>
-      <div style={{
-        background: 'white', borderRadius: '14px', padding: '1.1rem',
-        border: '1px solid #f3f4f6',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        cursor: 'pointer',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.1)' }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          <div style={{
-            width: '38px', height: '38px', borderRadius: '10px',
-            background: `${subject.color}15`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.1rem',
-          }}>{subject.icon}</div>
-          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: trendColor }}>
-            {trendIcon} {subject.avg}%
-          </span>
-        </div>
-        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#111827', marginBottom: '2px' }}>{subject.name}</div>
-        <div style={{ fontSize: '0.72rem', color: '#6b7280', marginBottom: '0.625rem' }}>{subject.teacher}</div>
-        <div style={{ height: '4px', background: '#f3f4f6', borderRadius: '2px' }}>
-          <div style={{
-            width: `${subject.avg}%`, height: '100%',
-            background: `linear-gradient(90deg, ${subject.color}, ${subject.color}99)`,
-            borderRadius: '2px', transition: 'width 0.6s ease',
-          }} />
-        </div>
+    <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+      <div style={{ ...shimmer, height: '100px', marginBottom: '1.5rem', borderRadius: '20px' }} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+        {[1,2,3,4].map(i => <div key={i} style={{ ...shimmer, height: '90px', borderRadius: '16px' }} />)}
       </div>
-    </Link>
-  )
-}
-
-export default function DashboardPage() {
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
-
-  return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '1.75rem' }}>
-        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '4px' }}>
-          {greeting} 👋
-        </p>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#111827', lineHeight: 1.2 }}>
-          {student.name}
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '4px' }}>
-          Grade {student.grade} · Section {student.section} · Q{student.quarter} SY {student.schoolYear}
-        </p>
-      </div>
-
-      {/* Stat cards */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '1rem', marginBottom: '1.75rem',
-      }}>
-        <StatCard icon="📊" label="Overall Average" value={`${student.average}%`} sub="↑ +2.1% from last quarter" color="#2563eb" bg="#eff6ff" />
-        <StatCard icon="📅" label="Attendance Rate" value={`${student.attendanceRate}%`} sub="19 of 20 days present" color="#059669" bg="#f0fdf4" />
-        <StatCard icon="🏆" label="Class Rank" value={`#${student.rank}`} sub={`of ${student.totalStudents} students`} color="#d97706" bg="#fffbeb" />
-        <StatCard icon="📚" label="Subjects" value={subjects.length} sub="All enrolled & active" color="#7c3aed" bg="#f5f3ff" />
-      </div>
-
-      {/* Main grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem' }}>
-        {/* Left column */}
-        <div>
-          {/* Subjects grid */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: '700', color: '#111827' }}>My Subjects</h2>
-              <Link href="/subjects" style={{ fontSize: '0.8rem', color: '#2563eb', textDecoration: 'none', fontWeight: '600' }}>
-                View all →
-              </Link>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem' }}>
-              {subjects.map(s => <SubjectCard key={s.id} subject={s} />)}
-            </div>
-          </div>
-
-          {/* Recent activity */}
-          <div>
-            <h2 style={{ fontSize: '1rem', fontWeight: '700', color: '#111827', marginBottom: '1rem' }}>Recent Activity</h2>
-            <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f3f4f6', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-              {recentActivity.map((a, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: '1rem',
-                  padding: '0.875rem 1.25rem',
-                  borderBottom: i < recentActivity.length - 1 ? '1px solid #f9fafb' : 'none',
-                }}>
-                  <div style={{
-                    width: '38px', height: '38px', borderRadius: '10px',
-                    background: a.type === 'exam' ? '#fef3c7' : '#eff6ff',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1rem', flexShrink: 0,
-                  }}>
-                    {a.type === 'exam' ? '📝' : '✏️'}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {a.title}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{a.subject} · {a.date}</div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: '700', color: (a.score / a.total) >= 0.85 ? '#16a34a' : (a.score / a.total) >= 0.75 ? '#d97706' : '#dc2626' }}>
-                      {a.score}/{a.total}
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{Math.round(a.score / a.total * 100)}%</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {/* Performance ring */}
-          <div style={{
-            background: 'linear-gradient(135deg, #1e3a8a, #312e81)',
-            borderRadius: '16px', padding: '1.5rem',
-            color: 'white', textAlign: 'center',
-          }}>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.75rem', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Quarter Performance
-            </p>
-            {/* Simple ring */}
-            <div style={{ position: 'relative', width: '100px', height: '100px', margin: '0 auto 1rem' }}>
-              <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
-                <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
-                <circle cx="50" cy="50" r="40" fill="none" stroke="url(#grad)" strokeWidth="8"
-                  strokeDasharray={`${student.average * 2.51} ${251 - student.average * 2.51}`}
-                  strokeLinecap="round" />
-                <defs>
-                  <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#60a5fa" />
-                    <stop offset="100%" stopColor="#a78bfa" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '1.4rem', fontWeight: '800' }}>{student.average}</span>
-                <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)' }}>avg</span>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
-              {[
-                { label: 'Highest', value: '92% Math' },
-                { label: 'Lowest', value: '83% AP' },
-                { label: 'Improving', value: '3 subjects' },
-                { label: 'At Risk', value: '1 subject' },
-              ].map(({ label, value }) => (
-                <div key={label} style={{
-                  background: 'rgba(255,255,255,0.08)', borderRadius: '8px',
-                  padding: '0.5rem 0.625rem',
-                }}>
-                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', marginBottom: '2px' }}>{label}</div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: '700' }}>{value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Recommendations */}
-          <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f3f4f6', padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '1rem' }}>🤖</span>
-              <h2 style={{ fontSize: '0.875rem', fontWeight: '700', color: '#111827' }}>Study Recommendations</h2>
-            </div>
-            {recommendations.map((r, i) => {
-              const colors = { high: { bg: '#fef2f2', text: '#dc2626', border: '#fecaca' }, medium: { bg: '#fffbeb', text: '#d97706', border: '#fde68a' }, low: { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0' } }
-              const c = colors[r.priority]
-              return (
-                <div key={i} style={{
-                  padding: '0.75rem', borderRadius: '10px',
-                  background: c.bg, border: `1px solid ${c.border}`,
-                  marginBottom: i < recommendations.length - 1 ? '0.625rem' : 0,
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#111827' }}>{r.subject}</span>
-                    <span style={{ fontSize: '0.65rem', fontWeight: '700', color: c.text, background: 'white', padding: '1px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                      {r.priority}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '0.78rem', fontWeight: '600', color: '#374151' }}>{r.topic}</div>
-                  <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: '2px' }}>{r.reason}</div>
-                </div>
-              )
-            })}
-            <Link href="/learning-path" style={{
-              display: 'block', textAlign: 'center', marginTop: '0.875rem',
-              padding: '8px', background: '#eff6ff',
-              borderRadius: '8px', color: '#2563eb',
-              textDecoration: 'none', fontSize: '0.8rem', fontWeight: '600',
-              border: '1px solid #bfdbfe',
-            }}>
-              View Learning Path →
-            </Link>
-          </div>
-
-          {/* Attendance mini card */}
-          <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #f3f4f6', padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <h2 style={{ fontSize: '0.875rem', fontWeight: '700', color: '#111827', marginBottom: '0.875rem' }}>📅 Attendance — Q3</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
-              {Array.from({ length: 20 }, (_, i) => {
-                const status = i === 7 ? 'absent' : i === 13 ? 'late' : 'present'
-                return (
-                  <div key={i} title={`Day ${i + 1}: ${status}`} style={{
-                    height: '24px', borderRadius: '4px',
-                    background: status === 'absent' ? '#fecaca' : status === 'late' ? '#fde68a' : '#bbf7d0',
-                    cursor: 'default',
-                  }} />
-                )
-              })}
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem' }}>
-              {[['#bbf7d0', '18 Present'], ['#fde68a', '1 Late'], ['#fecaca', '1 Absent']].map(([color, label]) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#6b7280' }}>
-                  <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: color, flexShrink: 0 }} />
-                  {label}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <div style={{ ...shimmer, height: '200px', borderRadius: '16px' }} />
     </div>
   )
 }

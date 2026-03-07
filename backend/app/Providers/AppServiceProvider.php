@@ -1,18 +1,21 @@
 <?php
-
 namespace App\Providers;
-
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL;
+use App\Services\AIService;
+use App\Services\AnalyticsService;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->singleton(AIService::class);
+        $this->app->singleton(AnalyticsService::class, function($app) {
+            return new AnalyticsService($app->make(AIService::class));
+        });
+    }
 
     public function boot(): void
     {
-        if (config('app.env') === 'production') {
-            URL::forceScheme('https');
-        }
+        \Illuminate\Support\Facades\URL::forceScheme('https');
     }
 }

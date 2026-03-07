@@ -36,3 +36,8 @@ return [
     ],
 
 ];
+// already handled by closing array — patch below,
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY', ''),
+    ],
+];
