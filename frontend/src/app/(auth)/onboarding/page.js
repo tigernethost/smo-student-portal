@@ -15,6 +15,12 @@ const CHALLENGES = [
   { value: 'test_anxiety',      label: 'Test anxiety',            icon: '😰', desc: 'I know the material but freeze during exams' },
   { value: 'lack_of_materials', label: 'Lack of study materials', icon: '📚', desc: 'Hard to find good resources to review with' },
 ]
+const LEARNING_STYLES = [
+  { value: 'visual',    label: 'Visual',          icon: '👁️',  desc: 'Charts, diagrams, and color-coded notes help me most' },
+  { value: 'reading',   label: 'Reading & Writing', icon: '📝', desc: 'I learn best by reading and writing things down' },
+  { value: 'practice',  label: 'Practice & Doing', icon: '✏️',  desc: 'Solving problems and practice tests work best for me' },
+  { value: 'listening', label: 'Listening',        icon: '🎧', desc: 'Explanations, discussions, and audio help me understand' },
+]
 const TOTAL_STEPS = 5
 
 export default function OnboardingPage() {
@@ -29,11 +35,9 @@ export default function OnboardingPage() {
   const [strand, setStrand]           = useState('')
   const [schoolName, setSchoolName]   = useState('')
 
-  const [subjects, setSubjects]               = useState([])
-  const [selectedSubjects, setSelectedSubjects] = useState([])
-
   const [goal, setGoal]           = useState('')
   const [challenge, setChallenge] = useState('')
+  const [learningStyle, setLearningStyle] = useState('')
 
   const [gradeFile, setGradeFile]         = useState(null)
   const [gradeFileName, setGradeFileName] = useState('')
@@ -59,13 +63,6 @@ export default function OnboardingPage() {
         if (u.avatar_url) setAvatarPreview(u.avatar_url)
       }).catch(() => {})
   }, [])
-
-  useEffect(() => {
-    if (step === 3 && subjects.length === 0) {
-      fetch('/api/subjects', { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.json()).then(d => setSubjects(Array.isArray(d) ? d : [])).catch(() => {})
-    }
-  }, [step])
 
   function handleAvatarChange(e) {
     const file = e.target.files[0]
@@ -108,8 +105,8 @@ export default function OnboardingPage() {
       if (schoolName) fd.append('school_name', schoolName)
       if (goal) fd.append('learning_goal', goal)
       if (challenge) fd.append('learning_challenge', challenge)
+      if (learningStyle) fd.append('learning_style', learningStyle)
       fd.append('onboarding_done', 'true')
-      selectedSubjects.forEach(id => fd.append('subject_ids[]', id))
       if (avatarFile) fd.append('avatar', avatarFile)
 
       await fetch('/api/student/profile', { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: fd })
@@ -310,39 +307,33 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* STEP 3 — Subjects */}
+          {/* STEP 3 — Learning Style */}
           {step === 3 && (
             <>
-              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📚</div>
-                <h1 style={s.heading}>Your Subjects</h1>
-                <p style={s.sub}>Select the subjects you're enrolled in this year.</p>
+              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🧠</div>
+                <h1 style={s.heading}>How Do You Learn Best?</h1>
+                <p style={s.sub}>This helps us tailor quizzes and study tips just for you.</p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '9px', maxHeight: '320px', overflowY: 'auto', marginBottom: '1rem', paddingRight: '2px' }}>
-                {subjects.map(sub => {
-                  const sel = selectedSubjects.includes(sub.id)
-                  return (
-                    <button key={sub.id} onClick={() => { setSelectedSubjects(prev => prev.includes(sub.id) ? prev.filter(s => s !== sub.id) : [...prev, sub.id]) }} style={{ display: 'flex', alignItems: 'center', gap: '9px', padding: '10px 12px', borderRadius: '11px', cursor: 'pointer', textAlign: 'left', border: sel ? `2px solid ${sub.color}` : '2px solid #e5e7eb', background: sel ? sub.color + '14' : 'white', fontFamily: 'inherit' }}>
-                      <span style={{ fontSize: '1.15rem' }}>{sub.icon}</span>
-                      <div>
-                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: sel ? sub.color : '#374151' }}>{sub.name}</div>
-                        {sel && <div style={{ fontSize: '0.64rem', color: sub.color }}>✓ Selected</div>}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div style={{ fontSize: '0.75rem', color: '#6b7280', textAlign: 'center', marginBottom: '1rem' }}>
-                {selectedSubjects.length} subject{selectedSubjects.length !== 1 ? 's' : ''} selected
+              <div style={{ display: 'grid', gap: '9px', marginBottom: '1.5rem' }}>
+                {LEARNING_STYLES.map(ls => (
+                  <button key={ls.value} onClick={() => setLearningStyle(ls.value)} style={{ display: 'flex', alignItems: 'center', gap: '13px', padding: '13px 16px', borderRadius: '13px', cursor: 'pointer', textAlign: 'left', border: learningStyle === ls.value ? '2px solid #2563eb' : '2px solid #e5e7eb', background: learningStyle === ls.value ? '#eff6ff' : 'white', fontFamily: 'inherit', transition: 'all 0.15s' }}>
+                    <span style={{ fontSize: '1.6rem', flexShrink: 0 }}>{ls.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.92rem', fontWeight: '700', color: learningStyle === ls.value ? '#2563eb' : '#111827' }}>{ls.label}</div>
+                      <div style={{ fontSize: '0.76rem', color: '#6b7280', marginTop: '2px', lineHeight: '1.4' }}>{ls.desc}</div>
+                    </div>
+                    {learningStyle === ls.value && <span style={{ color: '#2563eb', fontSize: '1.1rem', flexShrink: 0 }}>✓</span>}
+                  </button>
+                ))}
               </div>
 
               {error && <div style={s.errBox}>{error}</div>}
 
-              <div style={{ display: 'flex', gap: '8px', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => { setError(''); setStep(2) }} style={s.btnGray}>← Back</button>
-                <button onClick={() => { if (selectedSubjects.length === 0) { setError('Please select at least one subject.'); return } setError(''); setStep(4) }} style={{ flex: 1, padding: '11px', background: selectedSubjects.length > 0 ? 'linear-gradient(135deg,#2563eb,#7c3aed)' : '#e5e7eb', color: selectedSubjects.length > 0 ? 'white' : '#9ca3af', border: 'none', borderRadius: '10px', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: '700', cursor: selectedSubjects.length > 0 ? 'pointer' : 'not-allowed' }}>
+                <button onClick={() => { if (!learningStyle) { setError('Please pick a learning style.'); return } setError(''); setStep(4) }} style={{ flex: 1, padding: '11px', background: learningStyle ? 'linear-gradient(135deg,#2563eb,#7c3aed)' : '#e5e7eb', color: learningStyle ? 'white' : '#9ca3af', border: 'none', borderRadius: '10px', fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: '700', cursor: learningStyle ? 'pointer' : 'not-allowed' }}>
                   Continue →
                 </button>
               </div>

@@ -10,11 +10,13 @@ return new class extends Migration {
                 $table->string('learning_goal')->nullable()->after('school_name');
             if (!Schema::hasColumn('users', 'learning_challenge'))
                 $table->string('learning_challenge')->nullable()->after('learning_goal');
+            if (!Schema::hasColumn('users', 'learning_style'))
+                $table->string('learning_style')->nullable()->after('learning_challenge');
         });
     }
     public function down(): void {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['learning_goal', 'learning_challenge']);
+            $table->dropColumn(['learning_goal', 'learning_challenge', 'learning_style']);
         });
     }
 };

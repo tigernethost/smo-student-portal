@@ -31,6 +31,7 @@ class StudentController extends Controller
             'school_name'        => 'nullable|string|max:255',
             'learning_goal'      => 'nullable|string|max:255',
             'learning_challenge' => 'nullable|string|max:255',
+            'learning_style'      => 'nullable|string|max:100',
             'subject_ids'        => 'nullable|array',
             'subject_ids.*'      => 'exists:subjects,id',
             'avatar'             => 'nullable|image|max:4096',
