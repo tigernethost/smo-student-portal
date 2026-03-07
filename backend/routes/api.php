@@ -80,6 +80,21 @@ Route::post('/auth/facebook/deletion', [App\Http\Controllers\DataDeletionControl
 Route::get('/deletion-status',         [App\Http\Controllers\DataDeletionController::class, 'deletionStatus']);
 
 // One-time setup endpoint (protected by secret key)
+Route::post('/setup/migrate', function() {
+    $secret  = request()->header('X-Setup-Key');
+    $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
+    if ($secret !== $allowed) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    try {
+        \Artisan::call('migrate', ['--force' => true]);
+        $output = \Artisan::output();
+        return response()->json(['message' => 'Migrations run', 'output' => $output]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+});
+
 Route::post('/setup/seed', function() {
     $secret = request()->header('X-Setup-Key');
     $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
