@@ -54,12 +54,12 @@ export default function PortalLayout({ children }) {
         boxShadow: '0 0 20px rgba(0,0,0,0.06)',
       }}>
         {/* Logo */}
-        <div style={{ padding: '1.25rem 1.25rem 1rem', borderBottom: '1px solid #f3f4f6' }}>
+        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #f3f4f6' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '34px', height: '34px', borderRadius: '9px', background: 'linear-gradient(135deg,#2563eb,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '800', fontSize: '0.9rem' }}>S</div>
+            <img src="/logo.png" alt="SchoolMATE AI" style={{ width: '38px', height: '38px', objectFit: 'contain', borderRadius: '8px', background: '#000', padding: '2px' }} />
             <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#111827' }}>SchoolMATE</div>
-              <div style={{ fontSize: '0.65rem', color: '#9ca3af', fontWeight: '500' }}>Student Portal</div>
+              <div style={{ fontSize: '0.88rem', fontWeight: '800', color: '#111827', fontFamily: "'Source Code Pro', monospace", letterSpacing: '-0.01em', lineHeight: 1.2 }}>SchoolMATE <span style={{ background: 'linear-gradient(90deg,#2563eb,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</span></div>
+              <div style={{ fontSize: '0.6rem', color: '#9ca3af', fontWeight: '500', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Student Intelligent Platform</div>
             </div>
           </div>
         </div>

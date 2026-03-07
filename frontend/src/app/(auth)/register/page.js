@@ -94,7 +94,7 @@ export default function RegisterPage() {
     }}>
       <div style={{ width: '100%', maxWidth: '420px' }}>
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg,#2563eb,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '800', fontSize: '1.2rem', margin: '0 auto 10px' }}>S</div>
+          <img src="/logo.png" alt="SchoolMATE AI" style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '12px', background: '#000', padding: '4px', margin: '0 auto 10px', display: 'block' }} />
           <h1 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#111827' }}>Create your account</h1>
           <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '4px' }}>Free for all students — no school required</p>
         </div>

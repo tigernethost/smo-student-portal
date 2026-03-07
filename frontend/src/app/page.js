@@ -33,15 +33,7 @@ export default function Home() {
 
       <div style={{ textAlign: 'center', maxWidth: '560px', position: 'relative', zIndex: 1 }}>
         {/* Logo */}
-        <div style={{
-          width: '80px', height: '80px',
-          background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-          borderRadius: '20px',
-          margin: '0 auto 2rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 20px 40px rgba(59,130,246,0.4)',
-          fontSize: '2rem', fontWeight: '800', color: 'white',
-        }}>S</div>
+        <img src="/logo.png" alt="SchoolMATE AI" style={{ width: '90px', height: '90px', objectFit: 'contain', borderRadius: '18px', background: '#000', padding: '6px', margin: '0 auto 1.5rem', display: 'block', boxShadow: '0 20px 40px rgba(37,99,235,0.4)' }} />
 
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -56,11 +48,11 @@ export default function Home() {
           Now Live
         </div>
 
-        <h1 style={{ fontSize: '3rem', fontWeight: '800', color: 'white', lineHeight: 1.1, marginBottom: '0.5rem' }}>
-          SchoolMATE
+        <h1 style={{ fontSize: '2.8rem', fontWeight: '800', color: 'white', lineHeight: 1.1, marginBottom: '0.4rem', fontFamily: "'Source Code Pro', monospace", letterSpacing: '-0.02em' }}>
+          SchoolMATE <span style={{ background: 'linear-gradient(90deg,#60a5fa,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</span>
         </h1>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: '400', color: 'rgba(255,255,255,0.6)', marginBottom: '1.5rem' }}>
-          Student Portal
+        <h2 style={{ fontSize: '1rem', fontWeight: '500', color: 'rgba(255,255,255,0.5)', marginBottom: '1.5rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          Student Intelligent Platform
         </h2>
 
         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem', lineHeight: 1.7, marginBottom: '2.5rem' }}>
