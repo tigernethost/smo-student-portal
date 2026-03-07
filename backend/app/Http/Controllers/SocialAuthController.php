@@ -56,12 +56,20 @@ class SocialAuthController extends Controller
                 'email_verified_at' => now(),
                 'role'              => 'student',
                 'onboarding_done'   => false,
+                'social_provider'   => $provider,
             ]
         );
 
-        // Update avatar if available and not already set
+        // Update social fields if not already set
+        $updates = [];
         if (!$user->avatar_url && $socialUser->getAvatar()) {
-            $user->update(['avatar_url' => $socialUser->getAvatar()]);
+            $updates['avatar_url'] = $socialUser->getAvatar();
+        }
+        if (!$user->social_provider) {
+            $updates['social_provider'] = $provider;
+        }
+        if (!empty($updates)) {
+            $user->update($updates);
         }
 
         // Issue Sanctum token
