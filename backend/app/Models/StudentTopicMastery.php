@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class StudentTopicMastery extends Model {
+    protected $table = 'student_topic_mastery';
     protected $fillable = ['user_id','topic_id','mastery_score','attempts','correct','incorrect','status','last_attempted_at'];
     public function topic() { return $this->belongsTo(Topic::class); }
     public function user() { return $this->belongsTo(User::class); }
