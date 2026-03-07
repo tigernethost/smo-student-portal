@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController, StudentController, UploadController, QuizController, SocialAuthController};
+use App\Http\Controllers\{AuthController, StudentController, UploadController, QuizController, SocialAuthController, SubscriptionController};
 
-Route::get('/health', fn() => response()->json(['status'=>'ok','version'=>'2.0.0','timestamp'=>now()->toISOString()]));
+Route::get('/health', fn() => response()->json(['status'=>'ok','version'=>'2.1.0','timestamp'=>now()->toISOString()]));
 
 // Auth (email + social)
 Route::prefix('auth')->group(function () {
@@ -20,39 +20,59 @@ Route::prefix('auth')->group(function () {
 // Public
 Route::get('/subjects', [StudentController::class, 'availableSubjects']);
 
+// Public — Parent payment (no login)
+Route::get('/subscription/parent/{token}',          [SubscriptionController::class, 'parentInfo']);
+Route::post('/subscription/parent/{token}/checkout',[SubscriptionController::class, 'parentCheckout']);
+
+// Paynamics webhook (no auth — webhook comes from Paynamics server)
+Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook']);
+
 // Authenticated
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/student/profile',  [StudentController::class, 'profile']);
-    Route::put('/student/profile',  [StudentController::class, 'updateProfile']);
+    // Profile
+    Route::get('/student/profile',   [StudentController::class, 'profile']);
+    Route::put('/student/profile',   [StudentController::class, 'updateProfile']);
     Route::post('/student/profile',  [StudentController::class, 'updateProfile']); // FormData from onboarding
 
-    Route::get('/student/dashboard',        [StudentController::class, 'dashboard']);
-    Route::get('/student/analytics',        [StudentController::class, 'analytics']);
-    Route::post('/student/analytics/refresh',[StudentController::class, 'refreshAnalytics']);
-    Route::get('/student/learning-path',    [StudentController::class, 'learningPath']);
+    // Dashboard & analytics
+    Route::get('/student/dashboard',          [StudentController::class, 'dashboard']);
+    Route::get('/student/analytics',          [StudentController::class, 'analytics']);
+    Route::post('/student/analytics/refresh', [StudentController::class, 'refreshAnalytics']);
+    Route::get('/student/learning-path',      [StudentController::class, 'learningPath']);
 
-    Route::get('/student/recommendations',                       [StudentController::class, 'recommendations']);
-    Route::post('/student/recommendations/{id}/dismiss',         [StudentController::class, 'dismissRecommendation']);
+    // Recommendations
+    Route::get('/student/recommendations',                  [StudentController::class, 'recommendations']);
+    Route::post('/student/recommendations/{id}/dismiss',    [StudentController::class, 'dismissRecommendation']);
 
-    Route::get('/student/notifications',                         [StudentController::class, 'notifications']);
-    Route::post('/student/notifications/{id}/read',              [StudentController::class, 'markNotificationRead']);
-    Route::post('/student/notifications/read-all',               [StudentController::class, 'markAllNotificationsRead']);
+    // Notifications
+    Route::get('/student/notifications',                    [StudentController::class, 'notifications']);
+    Route::post('/student/notifications/{id}/read',         [StudentController::class, 'markNotificationRead']);
+    Route::post('/student/notifications/read-all',          [StudentController::class, 'markAllNotificationsRead']);
 
-    Route::get('/student/goals',     [StudentController::class, 'goals']);
-    Route::post('/student/goals',    [StudentController::class, 'storeGoal']);
-    Route::put('/student/goals/{id}',[StudentController::class, 'updateGoal']);
-    Route::delete('/student/goals/{id}',[StudentController::class, 'deleteGoal']);
+    // Goals
+    Route::get('/student/goals',          [StudentController::class, 'goals']);
+    Route::post('/student/goals',         [StudentController::class, 'storeGoal']);
+    Route::put('/student/goals/{id}',     [StudentController::class, 'updateGoal']);
+    Route::delete('/student/goals/{id}',  [StudentController::class, 'deleteGoal']);
 
-    Route::get('/uploads',        [UploadController::class, 'index']);
-    Route::post('/uploads',       [UploadController::class, 'store']);
-    Route::get('/uploads/{id}',   [UploadController::class, 'show']);
-    Route::delete('/uploads/{id}',[UploadController::class, 'destroy']);
+    // Uploads
+    Route::get('/uploads',         [UploadController::class, 'index']);
+    Route::post('/uploads',        [UploadController::class, 'store']);
+    Route::get('/uploads/{id}',    [UploadController::class, 'show']);
+    Route::delete('/uploads/{id}', [UploadController::class, 'destroy']);
 
-    Route::post('/quiz/generate',              [QuizController::class, 'generate']);
-    Route::post('/quiz/{sessionId}/answer',    [QuizController::class, 'answer']);
-    Route::post('/quiz/{sessionId}/finish',    [QuizController::class, 'finish']);
-    Route::get('/quiz/history',                [QuizController::class, 'history']);
-    Route::get('/quiz/{sessionId}/results',    [QuizController::class, 'results']);
+    // Quiz
+    Route::post('/quiz/generate',           [QuizController::class, 'generate']);
+    Route::post('/quiz/{sessionId}/answer', [QuizController::class, 'answer']);
+    Route::post('/quiz/{sessionId}/finish', [QuizController::class, 'finish']);
+    Route::get('/quiz/history',             [QuizController::class, 'history']);
+    Route::get('/quiz/{sessionId}/results', [QuizController::class, 'results']);
+
+    // Subscription & quota
+    Route::get('/subscription/status',                [SubscriptionController::class, 'status']);
+    Route::post('/subscription/checkout',             [SubscriptionController::class, 'checkout']);
+    Route::get('/subscription/history',               [SubscriptionController::class, 'history']);
+    Route::post('/subscription/generate-parent-link', [SubscriptionController::class, 'generateParentLink']);
 });
 
 // Facebook data deletion callback (required by Facebook Platform Policy)

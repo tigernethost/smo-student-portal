@@ -13,8 +13,12 @@ class User extends Authenticatable
     protected $fillable = [
         'name', 'email', 'password',
         'avatar_url', 'social_provider',
-        'grade_level', 'strand', 'school_name', 'learning_goal', 'learning_challenge', 'learning_style',
+        'grade_level', 'strand', 'school_name',
+        'learning_goal', 'learning_challenge', 'learning_style',
         'onboarding_done', 'role',
+        // Plan & quota
+        'plan', 'ai_quota_used', 'ai_quota_limit', 'ai_quota_reset_at',
+        'parent_payment_token',
         'email_verified_at',
     ];
 
@@ -24,5 +28,6 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password'          => 'hashed',
         'onboarding_done'   => 'boolean',
+        'ai_quota_reset_at' => 'datetime',
     ];
 }

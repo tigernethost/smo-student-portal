@@ -2,11 +2,15 @@
 namespace App\Http\Controllers;
 use App\Models\{AnalyticsSnapshot, Notification, Recommendation, StudentGoal, StudentSubject, StudentTopicMastery, Subject};
 use App\Services\AnalyticsService;
+use App\Services\AIQuotaService;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    public function __construct(private AnalyticsService $analytics) {}
+    public function __construct(
+        private AnalyticsService $analytics,
+        private AIQuotaService $quota
+    ) {}
 
     public function profile(Request $request)
     {
@@ -100,6 +104,7 @@ class StudentController extends Controller
             'recent_uploads' => $recentUploads,
             'unread_notifications' => Notification::where('user_id',$user->id)->where('is_read',false)->count(),
             'onboarding_done' => (bool)$user->onboarding_done,
+            'quota' => $this->quota->status($user),
         ]);
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use App\Models\StudentUpload;
 use App\Services\AIService;
+use App\Services\AIQuotaService;
 use App\Services\AnalyticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,8 @@ class UploadController extends Controller
 {
     public function __construct(
         private AIService $ai,
-        private AnalyticsService $analytics
+        private AnalyticsService $analytics,
+        private AIQuotaService $quota
     ) {}
 
     // POST /api/uploads  — upload image and analyze with AI
@@ -26,6 +28,19 @@ class UploadController extends Controller
         ]);
 
         $user = $request->user();
+
+        // ── AI Quota Check ────────────────────────────────────────────────────
+        $quotaCheck = $this->quota->check($user);
+        if (!$quotaCheck['allowed']) {
+            return response()->json([
+                'error'       => 'quota_exceeded',
+                'message'     => $quotaCheck['message'],
+                'quota'       => $this->quota->status($user),
+                'upgrade_url' => '/upgrade',
+            ], 402);
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         $file = $request->file('file');
 
         // Store file
@@ -84,6 +99,10 @@ class UploadController extends Controller
                 $this->analytics->updateMasteryFromUpload($user->id, $result['weak_topics'], $subjectId);
             }
 
+            // ── Consume one AI action ─────────────────────────────────────────
+            $this->quota->consume($user, 'upload', 2500, 800);
+            // ─────────────────────────────────────────────────────────────────
+
             // Regenerate analytics snapshot
             $snapshot = $this->analytics->generateSnapshot($user->id);
 
@@ -111,8 +130,9 @@ class UploadController extends Controller
         }
 
         return response()->json([
-            'upload' => $upload->fresh(),
+            'upload'  => $upload->fresh(),
             'message' => 'Upload processed successfully',
+            'quota'   => $this->quota->status($user),
         ]);
     }
 

@@ -8,6 +8,7 @@ use App\Models\QuizSession;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Services\AIService;
+use App\Services\AIQuotaService;
 use App\Services\AnalyticsService;
 use Illuminate\Http\Request;
 
@@ -15,7 +16,8 @@ class QuizController extends Controller
 {
     public function __construct(
         private AIService $ai,
-        private AnalyticsService $analytics
+        private AnalyticsService $analytics,
+        private AIQuotaService $quota
     ) {}
 
     // POST /api/quiz/generate  — start a new AI-generated quiz
@@ -30,6 +32,19 @@ class QuizController extends Controller
         ]);
 
         $user = $request->user();
+
+        // ── AI Quota Check ────────────────────────────────────────────────────
+        $quotaCheck = $this->quota->check($user);
+        if (!$quotaCheck['allowed']) {
+            return response()->json([
+                'error'        => 'quota_exceeded',
+                'message'      => $quotaCheck['message'],
+                'quota'        => $this->quota->status($user),
+                'upgrade_url'  => '/upgrade',
+            ], 402);
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         $subject = Subject::findOrFail($request->subject_id);
         $topic = $request->topic_id ? Topic::find($request->topic_id) : null;
         $numQ = $request->num_questions ?? 10;
@@ -52,6 +67,10 @@ class QuizController extends Controller
         if (empty($quizData['questions'])) {
             return response()->json(['message' => 'Failed to generate quiz'], 500);
         }
+
+        // ── Consume one AI action ─────────────────────────────────────────────
+        $this->quota->consume($user, 'quiz', 800, 1500);
+        // ─────────────────────────────────────────────────────────────────────
 
         // Save session
         $session = QuizSession::create([
@@ -91,6 +110,7 @@ class QuizController extends Controller
                 'choices' => $q->choices,
                 // Do NOT expose correct_answer here
             ]),
+            'quota' => $this->quota->status($user),
         ]);
     }
 
