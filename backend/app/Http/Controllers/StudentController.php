@@ -35,7 +35,7 @@ class StudentController extends Controller
             'subject_ids'        => 'nullable|array',
             'subject_ids.*'      => 'exists:subjects,id',
             'avatar'             => 'nullable|image|max:4096',
-            'onboarding_done'    => 'nullable|boolean',
+            'onboarding_done'    => 'nullable|in:true,false,1,0',
         ]);
 
         $user = $request->user();
@@ -68,7 +68,7 @@ class StudentController extends Controller
             }
         }
 
-        if ($request->boolean('onboarding_done')) {
+        if (in_array($request->input('onboarding_done'), [true, 1, 'true', '1', 'on', 'yes'], true) || $request->boolean('onboarding_done')) {
             $user->update(['onboarding_done' => true]);
         }
 
