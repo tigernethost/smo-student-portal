@@ -162,7 +162,7 @@ class QuizController extends Controller
                 'user_id' => $request->user()->id,
                 'type' => 'achievement',
                 'title' => '🌟 Great job!',
-                'message' => "You scored {$scorePct}% on {$session->topic?->name ?? $session->subject?->name}!",
+                'message' => "You scored {$scorePct}% on " . ($session->topic?->name ?? $session->subject?->name ?? 'this topic') . "!",
                 'icon' => '🌟',
                 'link' => "/quiz/{$session->id}/results",
             ]);
