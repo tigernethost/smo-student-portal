@@ -1,9 +1,11 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-export default function UpgradeSuccessPage() {
+export const dynamic = 'force-dynamic'
+
+function SuccessContent() {
   const params = useSearchParams()
   const source = params.get('source')
   const [quota, setQuota] = useState(null)
@@ -16,7 +18,7 @@ export default function UpgradeSuccessPage() {
         .then(r => r.json())
         .then(d => { if (d.quota) setQuota(d.quota) })
         .catch(() => {})
-    }, 1500) // small delay to let webhook process
+    }, 1500)
   }, [])
 
   return (
@@ -27,8 +29,8 @@ export default function UpgradeSuccessPage() {
       </h1>
       <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
         {source === 'parent'
-          ? 'Your parent\'s payment has been processed. Your plan has been upgraded!'
-          : 'Your subscription is now active. You\'re all set to learn!'}
+          ? "Your parent's payment has been processed. Your plan has been upgraded!"
+          : "Your subscription is now active. You're all set to learn!"}
       </p>
       {quota && (
         <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '1rem', marginBottom: '2rem' }}>
@@ -42,5 +44,13 @@ export default function UpgradeSuccessPage() {
         Go to Dashboard →
       </Link>
     </div>
+  )
+}
+
+export default function UpgradeSuccessPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: 'center', padding: '4rem', color: '#9ca3af' }}>Loading...</div>}>
+      <SuccessContent />
+    </Suspense>
   )
 }
