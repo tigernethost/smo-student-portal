@@ -122,3 +122,19 @@ Route::post('/setup/seed', function() {
         return response()->json(['error' => $e->getMessage()], 500);
     }
 });
+
+// Make a user an admin
+Route::post('/setup/make-admin', function() {
+    $secret = request()->header('X-Setup-Key');
+    $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
+    if ($secret !== $allowed) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    $email = request()->input('email');
+    $user = \App\Models\User::where('email', $email)->first();
+    if (!$user) {
+        return response()->json(['error' => "No user found with email: $email"], 404);
+    }
+    $user->update(['is_admin' => true]);
+    return response()->json(['message' => "Admin access granted to {$user->name} ({$user->email})"]);
+});
