@@ -18,7 +18,6 @@ services:
   instance_size_slug: apps-s-1vcpu-1gb
   routes:
   - path: /api
-  - path: /admin
   envs:
   - key: APP_ENV
     value: production

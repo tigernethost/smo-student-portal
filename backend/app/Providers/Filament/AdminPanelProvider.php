@@ -30,7 +30,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path('api/admin')
             ->login()
             ->colors(['primary' => Color::Blue])
             ->brandName('SchoolMATE AI — Admin')
