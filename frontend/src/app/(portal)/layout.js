@@ -148,7 +148,7 @@ export default function PortalLayout({ children }) {
       <style>{`
         @media (max-width: 768px) {
           .portal-sidebar { display: none !important; }
-          .portal-main { margin-left: 0 !important; padding: 1rem 1rem 5rem !important; }
+          .portal-main { margin-left: 0 !important; padding: 4.5rem 1rem 6rem !important; }
           .portal-topbar { display: flex !important; }
           .portal-bottomnav { display: flex !important; }
         }
