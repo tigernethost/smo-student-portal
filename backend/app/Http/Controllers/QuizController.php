@@ -57,15 +57,20 @@ class QuizController extends Controller
         }
 
         // Generate quiz via AI
-        $quizData = $this->ai->generateQuiz(
-            $subject->name,
-            $topic?->name ?? $subject->name,
-            $user->grade_level ?? 8,
-            $numQ
-        );
+        try {
+            $quizData = $this->ai->generateQuiz(
+                $subject->name,
+                $topic?->name ?? $subject->name,
+                $user->grade_level ?? 8,
+                $numQ
+            );
+        } catch (\Exception $e) {
+            \Log::error('Quiz AI failed', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Quiz generation failed', 'debug' => $e->getMessage()], 500);
+        }
 
         if (empty($quizData['questions'])) {
-            return response()->json(['message' => 'Failed to generate quiz'], 500);
+            return response()->json(['message' => 'Failed to generate quiz — AI returned empty'], 500);
         }
 
         // ── Consume one AI action ─────────────────────────────────────────────
