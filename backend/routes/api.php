@@ -138,3 +138,17 @@ Route::post('/setup/make-admin', function() {
     $user->update(['is_admin' => true]);
     return response()->json(['message' => "Admin access granted to {$user->name} ({$user->email})"]);
 });
+
+// Clear all caches
+Route::post('/setup/clear-cache', function() {
+    $secret = request()->header('X-Setup-Key');
+    $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
+    if ($secret !== $allowed) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    \Artisan::call('route:clear');
+    \Artisan::call('config:clear');
+    \Artisan::call('cache:clear');
+    \Artisan::call('view:clear');
+    return response()->json(['message' => 'All caches cleared']);
+});
