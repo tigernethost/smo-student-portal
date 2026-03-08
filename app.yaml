@@ -9,8 +9,9 @@ services:
   source_dir: backend
   environment_slug: php
   build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions
-    storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader
-    --ignore-platform-req=ext-intl && php artisan config:cache && php artisan view:cache
+    storage/logs bootstrap/cache && rm -f bootstrap/cache/routes-*.php && composer install
+    --no-dev --optimize-autoloader --ignore-platform-req=ext-intl && php artisan config:cache
+    && php artisan view:cache
   run_command: heroku-php-apache2 public/
   http_port: 8080
   instance_count: 1
