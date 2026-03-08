@@ -152,3 +152,34 @@ Route::post('/setup/clear-cache', function() {
     \Artisan::call('view:clear');
     return response()->json(['message' => 'All caches cleared']);
 });
+
+// ─── Parent Portal ───────────────────────────────────────────────────────────
+use App\Http\Controllers\ParentAuthController;
+use App\Http\Controllers\ParentDashboardController;
+
+// Public — register & login
+Route::prefix('parent/auth')->group(function () {
+    Route::post('/register', [ParentAuthController::class, 'register']);
+    Route::post('/login',    [ParentAuthController::class, 'login']);
+});
+
+// Protected — requires parent token
+Route::prefix('parent')->middleware('auth:sanctum')->group(function () {
+    Route::get('/auth/me',               [ParentAuthController::class, 'me']);
+    Route::post('/auth/logout',          [ParentAuthController::class, 'logout']);
+    Route::post('/auth/link',            [ParentAuthController::class, 'linkChild']);
+
+    Route::get('/children',                          [ParentDashboardController::class, 'children']);
+    Route::get('/children/{id}/dashboard',           [ParentDashboardController::class, 'dashboard']);
+    Route::get('/children/{id}/performance',         [ParentDashboardController::class, 'performance']);
+
+    Route::get('/notifications',                     [ParentDashboardController::class, 'notifications']);
+    Route::post('/notifications/read-all',           [ParentDashboardController::class, 'readAllNotifications']);
+});
+
+// Student — generate their own parent link code
+Route::middleware('auth:sanctum')->post('/student/parent-link-code', function () {
+    $user = request()->user();
+    $code = $user->generateParentLinkCode();
+    return response()->json(['link_code' => $code, 'message' => 'Share this code with your parent to link their account.']);
+});

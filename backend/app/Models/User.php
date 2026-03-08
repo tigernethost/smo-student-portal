@@ -20,6 +20,7 @@ class User extends Authenticatable implements FilamentUser
         'onboarding_done',
         'plan', 'ai_quota_used', 'ai_quota_limit', 'ai_quota_reset_at',
         'parent_payment_token',
+        'parent_link_code',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -57,5 +58,22 @@ class User extends Authenticatable implements FilamentUser
     public function uploads()
     {
         return $this->hasMany(StudentUpload::class);
+    }
+
+    public function parents()
+    {
+        return $this->belongsToMany(ParentAccount::class, 'parent_student_links', 'student_id', 'parent_id')
+            ->withPivot('relationship', 'is_active')
+            ->wherePivot('is_active', true)
+            ->withTimestamps();
+    }
+
+    public function generateParentLinkCode(): string
+    {
+        if (!$this->parent_link_code) {
+            $code = strtoupper(substr(str_replace(['+','/','='],'', base64_encode(random_bytes(8))), 0, 8));
+            $this->update(['parent_link_code' => $code]);
+        }
+        return $this->parent_link_code;
     }
 }
