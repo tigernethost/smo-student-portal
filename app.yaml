@@ -31,7 +31,7 @@ services:
       deploy_on_push: true
     source_dir: backend
     environment_slug: php
-    build_command: composer install --no-dev --optimize-autoloader && php artisan config:cache && php artisan route:cache && php artisan view:cache
+    build_command: composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-intl && php artisan config:cache && php artisan route:cache && php artisan view:cache
     run_command: heroku-php-apache2 public/
     http_port: 8080
     instance_count: 1
@@ -71,7 +71,7 @@ services:
       deploy_on_push: true
     source_dir: backend
     environment_slug: php
-    build_command: composer install --no-dev --optimize-autoloader
+    build_command: composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-intl
     run_command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
@@ -90,7 +90,7 @@ jobs:
       deploy_on_push: true
     source_dir: backend
     environment_slug: php
-    build_command: composer install --no-dev --optimize-autoloader
+    build_command: composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-intl
     run_command: php artisan migrate --force
 
 databases:
