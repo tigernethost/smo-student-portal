@@ -95,6 +95,13 @@ jobs:
     storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader
     --ignore-platform-req=ext-intl
   run_command: php artisan migrate --force
+  envs:
+  - key: DATABASE_URL
+    value: ${portal-db.DATABASE_URL}
+    scope: RUN_TIME
+  - key: DB_CONNECTION
+    value: pgsql
+    scope: RUN_TIME
 databases:
 - name: portal-db
   engine: PG
