@@ -65,7 +65,7 @@ export default function SettingsPage() {
 
   return (
     <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#111827', marginBottom: '0.25rem' }}>Settings</h1>
+      <h1 style={{ fontSize: 'clamp(1.2rem,3vw,1.5rem)', fontWeight: '800', color: '#111827', marginBottom: '0.25rem' }}>Settings</h1>
       <p style={{ color: '#6b7280', fontSize: '0.88rem', marginBottom: '1.75rem' }}>Manage your account and subscription</p>
 
       {/* Tabs */}
@@ -112,7 +112,8 @@ export default function SettingsPage() {
           </div>
 
           <form onSubmit={saveProfile}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+            <style>{'.settings-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; } @media(max-width:500px){.settings-form-grid{grid-template-columns:1fr;}}'}</style>
+            <div className="settings-form-grid">
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#374151', marginBottom: '5px' }}>Full Name</label>
                 <input
@@ -196,7 +197,7 @@ export default function SettingsPage() {
               Let your parent pay for your subscription without needing to log in.
             </p>
             {parentLink ? (
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <input readOnly value={parentLink} style={{ flex: 1, padding: '9px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '0.78rem', color: '#374151', background: '#f9fafb', fontFamily: 'monospace' }} />
                 <button onClick={() => { navigator.clipboard.writeText(parentLink); setMsg({ type: 'success', text: '✅ Link copied!' }) }}
                   style={{ padding: '9px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontFamily: 'inherit', fontSize: '0.8rem', fontWeight: '700', cursor: 'pointer' }}>Copy</button>
@@ -213,7 +214,7 @@ export default function SettingsPage() {
           {history.length > 0 && (
             <div style={{ background: 'white', border: '1px solid #f3f4f6', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <h2 style={{ fontWeight: '700', color: '#111827', fontSize: '1rem', marginBottom: '1rem' }}>Billing History</h2>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+              </div><div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', minWidth: '400px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
                     {['Date','Plan','Amount','Status'].map(h => (
@@ -238,7 +239,7 @@ export default function SettingsPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </div></div>
           )}
         </div>
       )}

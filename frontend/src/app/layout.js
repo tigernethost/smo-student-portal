@@ -1,5 +1,11 @@
 import './globals.css'
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 export const metadata = {
   title: 'SchoolMATE AI — Student Intelligent Platform',
   description: 'Your personalized AI-powered learning companion',

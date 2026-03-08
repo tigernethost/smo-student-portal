@@ -87,3 +87,36 @@ h1, h2, h3, h4, h5, h6,
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-sm);
 }
+
+/* ── Mobile & Touch Improvements ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+/* Tap target minimum size */
+button, a, [role="button"] {
+  min-height: 36px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent horizontal overflow */
+body { overflow-x: hidden; }
+
+/* Better input UX on iOS */
+input, select, textarea {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 8px;
+}
+
+/* Safe area insets for notched phones */
+.portal-bottomnav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Improve scrolling on mobile */
+nav, .overflow-scroll {
+  -webkit-overflow-scrolling: touch;
+}

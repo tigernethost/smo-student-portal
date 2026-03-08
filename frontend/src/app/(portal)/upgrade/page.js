@@ -154,7 +154,7 @@ export default function UpgradePage() {
       )}
 
       {/* Plans */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.25rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
         {PLANS.map(plan => {
           const isCurrentPlan = currentPlan === plan.id
           return (
@@ -214,13 +214,13 @@ export default function UpgradePage() {
       </div>
 
       {/* B2B Banner */}
-      <div style={{ background: 'linear-gradient(135deg,#0f172a,#1e293b)', borderRadius: '16px', padding: '1.5rem 2rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      <div style={{ background: 'linear-gradient(135deg,#0f172a,#1e293b)', borderRadius: '16px', padding: '1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'flex-start', gap: '1.25rem', flexWrap: 'wrap' }}>
         <div style={{ fontSize: '2.5rem' }}>🏫</div>
         <div style={{ flex: 1 }}>
           <div style={{ color: 'white', fontWeight: '800', fontSize: '1.05rem', marginBottom: '4px' }}>School-wide plan? Ask your admin.</div>
           <div style={{ color: '#94a3b8', fontSize: '0.82rem' }}>If your school signs up for SchoolMATE AI B2B, all students get access at ₱1,000–₱1,500/student/year — even cheaper than individual plans.</div>
         </div>
-        <a href="mailto:hello@schoolmate-online.net?subject=B2B Inquiry" style={{ padding: '10px 20px', background: 'white', color: '#0f172a', borderRadius: '10px', fontWeight: '700', fontSize: '0.82rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+        <a href="mailto:hello@schoolmate-online.net?subject=B2B Inquiry" style={{ padding: '10px 20px', background: 'white', color: '#0f172a', borderRadius: '10px', fontWeight: '700', fontSize: '0.82rem', textDecoration: 'none' }}>
           Contact Sales →
         </a>
       </div>

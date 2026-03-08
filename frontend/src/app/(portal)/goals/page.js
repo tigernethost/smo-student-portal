@@ -1,183 +1,141 @@
 'use client'
-import { useState } from 'react'
-
-const initialGoals = [
-  { id: 1, subject: 'Mathematics', type: 'grade', target: 95, current: 92, deadline: 'End of Q3', status: 'on-track', icon: '📐' },
-  { id: 2, subject: 'Araling Panlipunan', type: 'grade', target: 88, current: 83, deadline: 'End of Q3', status: 'at-risk', icon: '🌏' },
-  { id: 3, subject: 'All Subjects', type: 'attendance', target: 100, current: 94.2, deadline: 'End of S.Y.', status: 'on-track', icon: '📅' },
-  { id: 4, subject: 'Science', type: 'mastery', target: 80, current: 68, deadline: 'End of Q3', status: 'on-track', icon: '🔬' },
-]
+import { useState, useEffect } from 'react'
 
 export default function GoalsPage() {
-  const [goals, setGoals] = useState(initialGoals)
-  const [showNew, setShowNew] = useState(false)
-  const [newGoal, setNewGoal] = useState({ subject: '', type: 'grade', target: '', deadline: '' })
+  const [goals,   setGoals]   = useState([])
+  const [loading, setLoading] = useState(true)
+  const [form,    setForm]    = useState({ title: '', description: '', target_date: '', type: 'academic' })
+  const [adding,  setAdding]  = useState(false)
+  const [showForm,setShow]    = useState(false)
+  const [msg,     setMsg]     = useState(null)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
-  const statusColor = { 'on-track': '#16a34a', 'at-risk': '#dc2626', 'completed': '#7c3aed' }
-  const statusBg = { 'on-track': '#f0fdf4', 'at-risk': '#fef2f2', 'completed': '#f5f3ff' }
-  const statusLabel = { 'on-track': '✅ On Track', 'at-risk': '⚠️ At Risk', 'completed': '🏆 Completed' }
+  function load() {
+    fetch('/api/student/goals', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json()).then(d => setGoals(Array.isArray(d) ? d : d.data || [])).catch(() => {}).finally(() => setLoading(false))
+  }
+  useEffect(load, [])
+
+  async function addGoal(e) {
+    e.preventDefault(); setAdding(true); setMsg(null)
+    try {
+      const res = await fetch('/api/student/goals', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(form) })
+      if (res.ok) { setForm({ title:'', description:'', target_date:'', type:'academic' }); setShow(false); load() }
+      else setMsg({ type:'error', text:'Could not add goal.' })
+    } catch { setMsg({ type:'error', text:'Network error.' }) }
+    setAdding(false)
+  }
+
+  async function toggleComplete(goal) {
+    await fetch(`/api/student/goals/${goal.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status: goal.status === 'completed' ? 'active' : 'completed' }) })
+    load()
+  }
+
+  async function deleteGoal(id) {
+    if (!confirm('Delete this goal?')) return
+    await fetch(`/api/student/goals/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+    load()
+  }
+
+  const active    = goals.filter(g => g.status !== 'completed')
+  const completed = goals.filter(g => g.status === 'completed')
+  const typeIcon  = t => ({ academic:'📚', habit:'⏰', score:'🎯', other:'✨' })[t] || '🎯'
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem' }}>
+    <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#111827' }}>My Goals</h1>
-          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '4px' }}>
-            Set targets and track your progress
-          </p>
+          <h1 style={{ fontSize: 'clamp(1.2rem,3vw,1.5rem)', fontWeight: '800', color: '#111827', marginBottom: '0.25rem' }}>🎯 My Goals</h1>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>{active.length} active · {completed.length} completed</p>
         </div>
-        <button
-          onClick={() => setShowNew(!showNew)}
-          style={{
-            padding: '9px 18px',
-            background: 'linear-gradient(135deg, #2563eb, #7c3aed)',
-            color: 'white', border: 'none', borderRadius: '10px',
-            fontSize: '0.875rem', fontWeight: '600', cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          + New Goal
+        <button onClick={() => setShow(s => !s)} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#2563eb,#7c3aed)', color: 'white', border: 'none', borderRadius: '10px', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer' }}>
+          {showForm ? '✕ Cancel' : '+ New Goal'}
         </button>
       </div>
 
-      {/* New goal form */}
-      {showNew && (
-        <div style={{
-          background: 'white', borderRadius: '16px', padding: '1.5rem',
-          border: '1px solid #e0e7ff', boxShadow: '0 4px 16px rgba(37,99,235,0.1)',
-          marginBottom: '1.5rem',
-        }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#111827', marginBottom: '1rem' }}>Create New Goal</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            {[
-              { label: 'Subject', key: 'subject', placeholder: 'e.g., Mathematics' },
-              { label: 'Target (%)', key: 'target', placeholder: 'e.g., 90', type: 'number' },
-              { label: 'Deadline', key: 'deadline', placeholder: 'e.g., End of Q3' },
-            ].map(({ label, key, placeholder, type }) => (
-              <div key={key}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>{label}</label>
-                <input
-                  type={type || 'text'}
-                  placeholder={placeholder}
-                  value={newGoal[key]}
-                  onChange={e => setNewGoal(g => ({ ...g, [key]: e.target.value }))}
-                  style={{
-                    width: '100%', padding: '9px 12px',
-                    border: '1.5px solid #e5e7eb', borderRadius: '8px',
-                    fontSize: '0.875rem', fontFamily: 'inherit', outline: 'none',
-                    color: '#111827',
-                  }}
-                />
+      {showForm && (
+        <div style={{ background: 'white', borderRadius: '14px', padding: '1.25rem', border: '1px solid #e0e7ff', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(37,99,235,0.08)' }}>
+          <div style={{ fontWeight: '700', color: '#111827', marginBottom: '1rem', fontSize: '0.95rem' }}>✨ New Goal</div>
+          {msg && <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', color: '#dc2626', fontSize: '0.82rem', marginBottom: '0.75rem' }}>{msg.text}</div>}
+          <form onSubmit={addGoal}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <div style={{ gridColumn: '1/-1' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Goal Title *</label>
+                <input required value={form.title} onChange={e => setForm(f=>({...f,title:e.target.value}))} placeholder="e.g. Score 90% in Math" style={{ width: '100%', padding: '9px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
               </div>
-            ))}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Type</label>
+                <select value={form.type} onChange={e => setForm(f=>({...f,type:e.target.value}))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'inherit', background: 'white', outline: 'none', boxSizing: 'border-box' }}>
+                  <option value="academic">📚 Academic</option>
+                  <option value="habit">⏰ Study Habit</option>
+                  <option value="score">🎯 Score Target</option>
+                  <option value="other">✨ Other</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Target Date</label>
+                <input type="date" value={form.target_date} onChange={e => setForm(f=>({...f,target_date:e.target.value}))} style={{ width: '100%', padding: '9px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ gridColumn: '1/-1' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Notes (optional)</label>
+                <textarea value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} rows={2} placeholder="Any notes about this goal..." style={{ width: '100%', padding: '9px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'inherit', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+            <button type="submit" disabled={adding} style={{ padding: '10px 24px', background: 'linear-gradient(135deg,#2563eb,#7c3aed)', color: 'white', border: 'none', borderRadius: '9px', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer' }}>
+              {adding ? '⏳ Adding...' : '✅ Add Goal'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {loading ? <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>Loading...</div> : (
+        <>
+          {active.length > 0 && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Active</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {active.map(g => <GoalCard key={g.id} goal={g} typeIcon={typeIcon} onToggle={toggleComplete} onDelete={deleteGoal} />)}
+              </div>
+            </div>
+          )}
+          {completed.length > 0 && (
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Goal Type</label>
-              <select
-                value={newGoal.type}
-                onChange={e => setNewGoal(g => ({ ...g, type: e.target.value }))}
-                style={{
-                  width: '100%', padding: '9px 12px',
-                  border: '1.5px solid #e5e7eb', borderRadius: '8px',
-                  fontSize: '0.875rem', fontFamily: 'inherit', outline: 'none',
-                  color: '#111827', background: 'white',
-                }}
-              >
-                <option value="grade">Grade Target</option>
-                <option value="attendance">Attendance</option>
-                <option value="mastery">Topic Mastery</option>
-              </select>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-            <button
-              onClick={() => {
-                if (newGoal.subject && newGoal.target) {
-                  setGoals(g => [...g, {
-                    id: Date.now(), subject: newGoal.subject, type: newGoal.type,
-                    target: Number(newGoal.target), current: 0,
-                    deadline: newGoal.deadline || 'End of quarter',
-                    status: 'on-track', icon: '🎯',
-                  }])
-                  setNewGoal({ subject: '', type: 'grade', target: '', deadline: '' })
-                  setShowNew(false)
-                }
-              }}
-              style={{
-                padding: '9px 20px', background: '#2563eb', color: 'white',
-                border: 'none', borderRadius: '8px', fontSize: '0.875rem',
-                fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >Save Goal</button>
-            <button
-              onClick={() => setShowNew(false)}
-              style={{
-                padding: '9px 20px', background: '#f3f4f6', color: '#374151',
-                border: 'none', borderRadius: '8px', fontSize: '0.875rem',
-                fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit',
-              }}
-            >Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {/* Goals */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-        {goals.map(goal => {
-          const pct = Math.min(100, Math.round(goal.current / goal.target * 100))
-          return (
-            <div key={goal.id} style={{
-              background: 'white', borderRadius: '16px', padding: '1.25rem',
-              border: '1px solid #f3f4f6', boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-              display: 'flex', alignItems: 'center', gap: '1.25rem',
-            }}>
-              <div style={{
-                width: '48px', height: '48px', borderRadius: '12px',
-                background: '#f9fafb', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0,
-              }}>{goal.icon}</div>
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#111827' }}>{goal.subject}</div>
-                  <span style={{
-                    fontSize: '0.72rem', fontWeight: '700',
-                    color: statusColor[goal.status],
-                    background: statusBg[goal.status],
-                    padding: '2px 8px', borderRadius: '6px',
-                  }}>{statusLabel[goal.status]}</span>
-                </div>
-                <div style={{ fontSize: '0.78rem', color: '#6b7280', marginBottom: '0.625rem' }}>
-                  Target: {goal.target}% · Current: {goal.current}% · {goal.deadline}
-                </div>
-                <div style={{ height: '6px', background: '#f3f4f6', borderRadius: '3px' }}>
-                  <div style={{
-                    width: `${pct}%`, height: '100%', borderRadius: '3px',
-                    background: goal.status === 'at-risk'
-                      ? 'linear-gradient(90deg, #dc2626, #f87171)'
-                      : 'linear-gradient(90deg, #2563eb, #7c3aed)',
-                    transition: 'width 0.6s ease',
-                  }} />
-                </div>
-                <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: '4px' }}>
-                  {pct}% towards goal · {goal.target - goal.current > 0 ? `${goal.target - goal.current}% to go` : '🎉 Goal reached!'}
-                </div>
+              <div style={{ fontSize: '0.78rem', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Completed 🎉</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {completed.map(g => <GoalCard key={g.id} goal={g} typeIcon={typeIcon} onToggle={toggleComplete} onDelete={deleteGoal} />)}
               </div>
             </div>
-          )
-        })}
-      </div>
-
-      {goals.length === 0 && (
-        <div style={{
-          textAlign: 'center', padding: '3rem',
-          background: 'white', borderRadius: '16px',
-          border: '1px dashed #e5e7eb', color: '#9ca3af',
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🎯</div>
-          <p style={{ fontWeight: '600' }}>No goals yet</p>
-          <p style={{ fontSize: '0.875rem' }}>Click "New Goal" to set your first academic target</p>
-        </div>
+          )}
+          {goals.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🎯</div>
+              <div style={{ fontWeight: '600', marginBottom: '4px' }}>No goals yet</div>
+              <div style={{ fontSize: '0.82rem' }}>Set goals to track your progress!</div>
+            </div>
+          )}
+        </>
       )}
+    </div>
+  )
+}
+
+function GoalCard({ goal, typeIcon, onToggle, onDelete }) {
+  const done = goal.status === 'completed'
+  const overdue = goal.target_date && !done && new Date(goal.target_date) < new Date()
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px 14px', background: 'white', borderRadius: '12px', border: `1px solid ${done ? '#bbf7d0' : overdue ? '#fca5a5' : '#f3f4f6'}`, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', opacity: done ? 0.7 : 1 }}>
+      <button onClick={() => onToggle(goal)} style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${done ? '#16a34a' : '#d1d5db'}`, background: done ? '#16a34a' : 'white', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '1px', padding: 0 }}>
+        {done && <span style={{ color: 'white', fontSize: '0.7rem', lineHeight: 1 }}>✓</span>}
+      </button>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+          <span style={{ fontSize: '0.9rem' }}>{typeIcon(goal.type)}</span>
+          <span style={{ fontSize: '0.85rem', fontWeight: '700', color: done ? '#9ca3af' : '#111827', textDecoration: done ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{goal.title}</span>
+        </div>
+        {goal.description && <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '3px' }}>{goal.description}</div>}
+        {goal.target_date && <div style={{ fontSize: '0.7rem', color: overdue ? '#dc2626' : '#9ca3af', fontWeight: overdue ? '600' : '400' }}>{overdue ? '⚠️ Overdue · ' : '📅 '}{new Date(goal.target_date).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' })}</div>}
+      </div>
+      <button onClick={() => onDelete(goal.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: '#d1d5db', flexShrink: 0, padding: '2px' }}>🗑</button>
     </div>
   )
 }
