@@ -101,7 +101,7 @@ PROMPT;
         ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Quiz generation failed');
+            throw new \Exception('AI API error: HTTP ' . $response->status() . ' — ' . substr($response->body(), 0, 300));
         }
 
         $text = $response->json('content.0.text', '{}');
