@@ -57,6 +57,7 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php -r \"@mkdir(dirname(__FILE__).\"/storage/framework/views\", 0755, true); @mkdir(dirname(__FILE__).\"/storage/framework/cache\", 0755, true); @mkdir(dirname(__FILE__).\"/storage/framework/sessions\", 0755, true); @mkdir(dirname(__FILE__).\"/storage/logs\", 0755, true); @mkdir(dirname(__FILE__).\"/bootstrap/cache\", 0755, true);\"",
             "@php artisan package:discover --ansi",
             "@php artisan filament:upgrade"
         ],
