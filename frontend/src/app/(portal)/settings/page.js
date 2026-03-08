@@ -210,6 +210,14 @@ export default function SettingsPage() {
             )}
           </div>
 
+
+          {/* Parent Link Code */}
+          <div style={{ background: 'white', border: '1px solid #f3f4f6', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            <h2 style={{ fontWeight: '700', color: '#111827', fontSize: '1rem', marginBottom: '0.25rem' }}>👨‍👩‍👧 Parent Access</h2>
+            <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: '0 0 1rem' }}>Share your link code so a parent can monitor your progress in the Parent Portal.</p>
+            <ParentLinkCode token={token} />
+          </div>
+
           {/* Billing history */}
           {history.length > 0 && (
             <div style={{ background: 'white', border: '1px solid #f3f4f6', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
@@ -242,6 +250,64 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ParentLinkCode({ token }) {
+  const [code, setCode] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const API = process.env.NEXT_PUBLIC_API_URL || ''
+
+  const generate = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/api/student/parent-link-code`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      })
+      const data = await res.json()
+      setCode(data.link_code)
+    } catch {}
+    setLoading(false)
+  }
+
+  const copy = () => {
+    if (code) {
+      navigator.clipboard.writeText(code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <div>
+      {!code ? (
+        <button onClick={generate} disabled={loading}
+          style={{ background: loading ? '#e5e7eb' : 'linear-gradient(135deg,#6366f1,#8b5cf6)', border: 'none', borderRadius: 8, padding: '0.65rem 1.25rem', color: '#fff', fontSize: '0.875rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer' }}>
+          {loading ? 'Generating…' : '🔑 Generate Parent Link Code'}
+        </button>
+      ) : (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ background: '#f8fafc', border: '2px dashed #c7d2fe', borderRadius: 10, padding: '0.75rem 1.5rem', fontFamily: 'monospace', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.15em', color: '#4f46e5' }}>
+              {code}
+            </div>
+            <button onClick={copy}
+              style={{ background: copied ? '#10b981' : '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 8, padding: '0.65rem 1rem', color: copied ? '#fff' : '#374151', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
+              {copied ? '✓ Copied!' : '📋 Copy'}
+            </button>
+          </div>
+          <p style={{ color: '#9ca3af', fontSize: '0.8rem', marginTop: '0.75rem' }}>
+            Share this code with your parent. They can use it when registering at{' '}
+            <a href="/parent/register" target="_blank" style={{ color: '#6366f1' }}>portal.schoolmate-online.net/parent/register</a>
+          </p>
+          <p style={{ color: '#d1d5db', fontSize: '0.75rem', margin: '0.25rem 0 0' }}>
+            This code is permanent — your parent only needs it once when registering.
+          </p>
         </div>
       )}
     </div>

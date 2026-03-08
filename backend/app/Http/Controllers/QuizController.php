@@ -101,6 +101,26 @@ class QuizController extends Controller
             ]);
         }
 
+
+        // Notify linked parents about quiz completion
+        try {
+            $student = $request->user();
+            $linkedParents = \App\Models\ParentStudentLink::where('student_id', $student->id)
+                ->where('is_active', true)->get();
+
+            foreach ($linkedParents as $link) {
+                $emoji = $scorePct >= 75 ? '✅' : ($scorePct >= 50 ? '🟡' : '⚠️');
+                \App\Models\ParentNotification::create([
+                    'parent_id'  => $link->parent_id,
+                    'student_id' => $student->id,
+                    'type'       => $scorePct < 50 ? 'at_risk' : 'quiz_completed',
+                    'title'      => "{$emoji} {$student->name} completed a quiz",
+                    'body'       => "Scored {$scorePct}% on " . ($session->topic?->name ?? $session->subject?->name ?? 'a topic') . " ({$session->correct}/{$session->total_questions} correct)",
+                    'data'       => ['session_id' => $session->id, 'score_pct' => $scorePct],
+                ]);
+            }
+        } catch (\Exception $e) {}
+
         $questions = $session->questions()->orderBy('question_number')->get();
 
         return response()->json([
