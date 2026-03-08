@@ -1,107 +1,108 @@
 name: smo-student-portal
 region: sgp
-
 services:
-  - name: frontend
-    github:
-      repo: tigernethost/smo-student-portal
-      branch: main
-      deploy_on_push: true
-    source_dir: frontend
-    environment_slug: node-js
-    build_command: npm ci && npm run build
-    run_command: npm start
-    http_port: 3000
-    instance_count: 1
-    instance_size_slug: apps-s-1vcpu-1gb
-    routes:
-      - path: /
-    envs:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_TELEMETRY_DISABLED
-        value: "1"
-      - key: NEXT_PUBLIC_API_URL
-        value: ${APP_URL}
-
-  - name: backend
-    github:
-      repo: tigernethost/smo-student-portal
-      branch: main
-      deploy_on_push: true
-    source_dir: backend
-    environment_slug: php
-    build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-intl && php artisan config:cache && php artisan route:cache && php artisan view:cache
-    run_command: heroku-php-apache2 public/
-    http_port: 8080
-    instance_count: 1
-    instance_size_slug: apps-s-1vcpu-1gb
-    routes:
-      - path: /api
-      - path: /admin
-    envs:
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: "false"
-      - key: APP_KEY
-        value: ""
-        type: SECRET
-      - key: LOG_CHANNEL
-        value: stderr
-      - key: DB_CONNECTION
-        value: pgsql
-      - key: DB_HOST
-        value: ${portal-db.HOSTNAME}
-      - key: DB_PORT
-        value: ${portal-db.PORT}
-      - key: DB_DATABASE
-        value: ${portal-db.DATABASE}
-      - key: DB_USERNAME
-        value: ${portal-db.USERNAME}
-      - key: DB_PASSWORD
-        value: ${portal-db.PASSWORD}
-        type: SECRET
-      - key: DB_SSLMODE
-        value: require
-
-  - name: queue-worker
-    github:
-      repo: tigernethost/smo-student-portal
-      branch: main
-      deploy_on_push: true
-    source_dir: backend
-    environment_slug: php
-    build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-intl
-    run_command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
-    instance_count: 1
-    instance_size_slug: apps-s-1vcpu-0.5gb
-    envs:
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: "false"
-
+- name: backend
+  github:
+    repo: tigernethost/smo-student-portal
+    branch: main
+    deploy_on_push: true
+  source_dir: backend
+  environment_slug: php
+  build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions
+    storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader
+    --ignore-platform-req=ext-intl && php artisan config:cache && php artisan route:cache
+    && php artisan view:cache
+  run_command: heroku-php-apache2 public/
+  http_port: 8080
+  instance_count: 1
+  instance_size_slug: apps-s-1vcpu-1gb
+  routes:
+  - path: /api
+  - path: /admin
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: APP_DEBUG
+    value: 'false'
+  - key: APP_KEY
+    value: ''
+    type: SECRET
+  - key: LOG_CHANNEL
+    value: stderr
+  - key: DB_CONNECTION
+    value: pgsql
+  - key: DB_HOST
+    value: ${portal-db.HOSTNAME}
+  - key: DB_PORT
+    value: ${portal-db.PORT}
+  - key: DB_DATABASE
+    value: ${portal-db.DATABASE}
+  - key: DB_USERNAME
+    value: ${portal-db.USERNAME}
+  - key: DB_PASSWORD
+    value: ${portal-db.PASSWORD}
+    type: SECRET
+  - key: DB_SSLMODE
+    value: require
+- name: frontend
+  github:
+    repo: tigernethost/smo-student-portal
+    branch: main
+    deploy_on_push: true
+  source_dir: frontend
+  environment_slug: node-js
+  build_command: npm ci && npm run build
+  run_command: npm start
+  http_port: 3000
+  instance_count: 1
+  instance_size_slug: apps-s-1vcpu-1gb
+  routes:
+  - path: /
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: NEXT_TELEMETRY_DISABLED
+    value: '1'
+  - key: NEXT_PUBLIC_API_URL
+    value: ${APP_URL}
+- name: queue-worker
+  github:
+    repo: tigernethost/smo-student-portal
+    branch: main
+    deploy_on_push: true
+  source_dir: backend
+  environment_slug: php
+  build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions
+    storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader
+    --ignore-platform-req=ext-intl
+  run_command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+  instance_count: 1
+  instance_size_slug: apps-s-1vcpu-0.5gb
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: APP_DEBUG
+    value: 'false'
 jobs:
-  - name: db-migrate
-    kind: PRE_DEPLOY
-    github:
-      repo: tigernethost/smo-student-portal
-      branch: main
-      deploy_on_push: true
-    source_dir: backend
-    environment_slug: php
-    build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-intl
-    run_command: php artisan migrate --force
-
+- name: db-migrate
+  kind: PRE_DEPLOY
+  github:
+    repo: tigernethost/smo-student-portal
+    branch: main
+    deploy_on_push: true
+  source_dir: backend
+  environment_slug: php
+  build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions
+    storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader
+    --ignore-platform-req=ext-intl
+  run_command: php artisan migrate --force
 databases:
-  - name: portal-db
-    engine: PG
-    version: "16"
-    size: db-s-dev-database
-    num_nodes: 1
-    production: false
-
+- name: portal-db
+  engine: PG
+  version: '16'
+  size: db-s-dev-database
+  num_nodes: 1
+  production: false
 domains:
-  - domain: portal.schoolmate-online.net
-    type: PRIMARY
+- domain: portal.schoolmate-online.net
+  type: PRIMARY
