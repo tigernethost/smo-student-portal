@@ -3,7 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{AuthController, StudentController, UploadController, QuizController, SocialAuthController, SubscriptionController};
 
-Route::get('/health', fn() => response()->json(['status'=>'ok','version'=>'2.1.0','timestamp'=>now()->toISOString()]));
+Route::get('/health', function() {
+    $key = env('ANTHROPIC_API_KEY', '');
+    return response()->json([
+        'status'        => 'ok',
+        'version'       => '2.1.0',
+        'timestamp'     => now()->toISOString(),
+        'ai_key_prefix' => !empty($key) ? substr($key, 0, 14) . '...' : 'NOT SET',
+    ]);
+});
 
 // Auth (email + social)
 Route::prefix('auth')->group(function () {
