@@ -214,7 +214,7 @@ export default function SettingsPage() {
           {history.length > 0 && (
             <div style={{ background: 'white', border: '1px solid #f3f4f6', borderRadius: '14px', padding: '1.5rem', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
               <h2 style={{ fontWeight: '700', color: '#111827', fontSize: '1rem', marginBottom: '1rem' }}>Billing History</h2>
-              </div><div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', minWidth: '400px' }}>
+              <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', minWidth: '400px' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
                     {['Date','Plan','Amount','Status'].map(h => (
@@ -239,7 +239,8 @@ export default function SettingsPage() {
                   ))}
                 </tbody>
               </table>
-            </div></div>
+              </div>
+            </div>
           )}
         </div>
       )}
