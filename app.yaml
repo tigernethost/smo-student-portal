@@ -104,6 +104,8 @@ services:
     value: database
   - key: CACHE_DRIVER
     value: array
+  - key: DATABASE_URL
+    value: ${portal-db.DATABASE_URL}
   - *id001
 jobs:
 - name: db-migrate
