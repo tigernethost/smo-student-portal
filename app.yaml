@@ -9,9 +9,9 @@ services:
   source_dir: backend
   environment_slug: php
   build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions
-    storage/logs bootstrap/cache && rm -f bootstrap/cache/routes-*.php && composer install
-    --no-dev --optimize-autoloader --ignore-platform-req=ext-intl && php artisan config:cache
-    && php artisan view:cache
+    storage/logs bootstrap/cache && rm -f bootstrap/cache/routes-*.php && composer
+    install --no-dev --optimize-autoloader --ignore-platform-req=ext-intl && php artisan
+    config:cache && php artisan view:cache
   run_command: heroku-php-apache2 public/
   http_port: 8080
   instance_count: 1
@@ -23,7 +23,8 @@ services:
     value: production
   - key: APP_DEBUG
     value: 'false'
-  - key: APP_KEY
+  - &id001
+    key: APP_KEY
     value: ''
     type: SECRET
   - key: LOG_CHANNEL
@@ -82,6 +83,27 @@ services:
     value: production
   - key: APP_DEBUG
     value: 'false'
+  - key: LOG_CHANNEL
+    value: stderr
+  - key: DB_CONNECTION
+    value: pgsql
+  - key: DB_HOST
+    value: ${portal-db.HOSTNAME}
+  - key: DB_PORT
+    value: ${portal-db.PORT}
+  - key: DB_DATABASE
+    value: ${portal-db.DATABASE}
+  - key: DB_USERNAME
+    value: ${portal-db.USERNAME}
+  - key: DB_PASSWORD
+    value: ${portal-db.PASSWORD}
+  - key: DB_SSLMODE
+    value: require
+  - key: QUEUE_CONNECTION
+    value: database
+  - key: CACHE_DRIVER
+    value: database
+  - *id001
 jobs:
 - name: db-migrate
   kind: PRE_DEPLOY
