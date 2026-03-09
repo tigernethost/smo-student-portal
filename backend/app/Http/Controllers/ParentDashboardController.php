@@ -37,7 +37,7 @@ class ParentDashboardController extends Controller
         // Recent quiz sessions (last 5)
         $recentQuizzes = QuizSession::where('user_id', $id)
             ->where('status', 'completed')
-            ->with('subject', 'topic')
+            ->with('topic.subject')
             ->latest()->limit(5)->get()
             ->map(fn($q) => [
                 'subject'    => $q->subject?->name,
@@ -50,13 +50,13 @@ class ParentDashboardController extends Controller
 
         // Subject mastery summary
         $masteries = StudentTopicMastery::where('user_id', $id)
-            ->with('subject')
+            ->with('topic.subject')
             ->get()
-            ->groupBy('subject_id')
+            ->groupBy(fn($m) => $m->topic?->subject_id)
             ->map(fn($group) => [
-                'subject'       => $group->first()->subject?->name,
-                'icon'          => $group->first()->subject?->icon,
-                'color'         => $group->first()->subject?->color,
+                'subject'       => $group->first()->topic?->subject?->name,
+                'icon'          => $group->first()->topic?->subject?->icon,
+                'color'         => $group->first()->topic?->subject?->color,
                 'mastered'      => $group->where('mastery_score', '>=', 75)->count(),
                 'total'         => $group->count(),
                 'avg_mastery'   => round($group->avg('mastery_score')),
@@ -89,9 +89,9 @@ class ParentDashboardController extends Controller
         if (!$student) return response()->json(['error' => 'Unauthorized'], 403);
 
         $masteries = StudentTopicMastery::where('user_id', $id)
-            ->with('subject', 'topic')
+            ->with('topic.subject')
             ->get()
-            ->groupBy('subject_id');
+            ->groupBy(fn($m) => $m->topic?->subject_id);
 
         $subjects = $masteries->map(function ($topics, $subjectId) {
             $subject = $topics->first()->subject;
@@ -104,9 +104,9 @@ class ParentDashboardController extends Controller
 
             return [
                 'id'          => $subjectId,
-                'name'        => $subject?->name,
-                'icon'        => $subject?->icon,
-                'color'       => $subject?->color,
+                'name'        => $topics->first()->topic?->subject?->name,
+                'icon'        => $topics->first()->topic?->subject?->icon,
+                'color'       => $topics->first()->topic?->subject?->color,
                 'avg_mastery' => round($topics->avg('mastery_score')),
                 'total'       => $topics->count(),
                 'status'      => $byStatus,

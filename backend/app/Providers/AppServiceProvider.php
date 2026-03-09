@@ -4,6 +4,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Services\AIService;
 use App\Services\AnalyticsService;
+use App\Models\ParentAccount;
+use Laravel\Sanctum\Sanctum;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 use SocialiteProviders\Apple\AppleExtendSocialite;
 
@@ -20,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Support\Facades\URL::forceScheme('https');
+
+        // Allow Sanctum to authenticate both User and ParentAccount models
+        Sanctum::usePersonalAccessTokenModel(\Laravel\Sanctum\PersonalAccessToken::class);
 
         // Register Apple Socialite provider
         \Illuminate\Support\Facades\Event::listen(
