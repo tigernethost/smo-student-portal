@@ -74,9 +74,15 @@ services:
   source_dir: backend
   environment_slug: php
   build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions
-    storage/logs bootstrap/cache && composer install --no-dev --optimize-autoloader
-    --ignore-platform-req=ext-intl
-  run_command: php artisan config:clear && php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    storage/logs bootstrap/cache && rm -f bootstrap/cache/*.php && composer install
+    --no-dev --optimize-autoloader --ignore-platform-req=ext-intl
+  run_command: |
+    echo "DB_CONNECTION=pgsql" >> .env
+    echo "CACHE_DRIVER=array" >> .env
+    echo "SESSION_DRIVER=array" >> .env
+    echo "QUEUE_CONNECTION=database" >> .env
+    php artisan config:clear
+    php artisan queue:work --sleep=3 --tries=3 --max-time=3600
   instance_count: 1
   instance_size_slug: apps-s-1vcpu-0.5gb
   envs:
