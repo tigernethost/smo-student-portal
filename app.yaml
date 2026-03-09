@@ -12,7 +12,7 @@ services:
     storage/logs bootstrap/cache && rm -f bootstrap/cache/routes-*.php && composer
     install --no-dev --optimize-autoloader --ignore-platform-req=ext-intl && php artisan
     config:clear && php artisan route:clear && php artisan view:clear
-  run_command: heroku-php-apache2 public/
+  run_command: php artisan route:clear && php artisan config:clear && php artisan view:clear && heroku-php-apache2 public/
   http_port: 8080
   instance_count: 1
   instance_size_slug: apps-s-1vcpu-1gb
