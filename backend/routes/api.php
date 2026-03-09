@@ -183,3 +183,34 @@ Route::middleware('auth:sanctum')->post('/student/parent-link-code', function ()
     $code = $user->generateParentLinkCode();
     return response()->json(['link_code' => $code, 'message' => 'Share this code with your parent to link their account.']);
 });
+
+// ─── Parent Portal ────────────────────────────────────────────────────────────
+Route::prefix('parent')->group(function () {
+    // Auth (public)
+    Route::post('/auth/register', [App\Http\Controllers\ParentAuthController::class, 'register']);
+    Route::post('/auth/login',    [App\Http\Controllers\ParentAuthController::class, 'login']);
+
+    // Protected
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/auth/me',            [App\Http\Controllers\ParentAuthController::class, 'me']);
+        Route::post('/auth/logout',       [App\Http\Controllers\ParentAuthController::class, 'logout']);
+        Route::post('/auth/link',         [App\Http\Controllers\ParentAuthController::class, 'linkChild']);
+
+        Route::get('/children',                         [App\Http\Controllers\ParentDashboardController::class, 'children']);
+        Route::get('/children/{id}/dashboard',          [App\Http\Controllers\ParentDashboardController::class, 'dashboard']);
+        Route::get('/children/{id}/performance',        [App\Http\Controllers\ParentDashboardController::class, 'performance']);
+        Route::get('/notifications',                    [App\Http\Controllers\ParentDashboardController::class, 'notifications']);
+        Route::post('/notifications/read-all',          [App\Http\Controllers\ParentDashboardController::class, 'readAllNotifications']);
+    });
+});
+
+// Student: get/generate their parent link code
+Route::middleware('auth:sanctum')->get('/student/parent-link-code', function (\Illuminate\Http\Request $request) {
+    $user = $request->user();
+    $code = $user->generateParentLinkCode();
+    return response()->json([
+        'link_code'   => $code,
+        'share_url'   => config('app.url') . '/parent/register?code=' . $code,
+        'share_text'  => "Join " . ($user->name ?? 'my') . "'s SchoolMATE portal as a parent. Use code: {$code} or visit: " . config('app.url') . "/parent/register?code={$code}",
+    ]);
+});
