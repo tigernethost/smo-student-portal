@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Guard: skip if already migrated
+        if (Schema::hasTable('subjects')) {
+            return;
+        }
         // Extend users table
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'grade_level'))
@@ -171,18 +175,6 @@ return new class extends Migration
         });
 
         // Student goals
-        Schema::create('student_goals', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('subject_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('subject_name');
-            $table->string('type')->default('grade');
-            $table->decimal('target', 5, 2);
-            $table->decimal('current_value', 5, 2)->default(0);
-            $table->string('deadline')->nullable();
-            $table->string('status')->default('on-track');
-            $table->timestamps();
-        });
     }
 
     public function down(): void
