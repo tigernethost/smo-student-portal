@@ -77,16 +77,10 @@ services:
     storage/logs bootstrap/cache && rm -f bootstrap/cache/*.php && composer install
     --no-dev --optimize-autoloader --ignore-platform-req=ext-intl
   run_command: |
-    # Force correct drivers before any artisan command runs
-    sed -i '/^CACHE_DRIVER/d' .env || true
-    sed -i '/^SESSION_DRIVER/d' .env || true
-    sed -i '/^QUEUE_CONNECTION/d' .env || true
-    sed -i '/^DB_CONNECTION/d' .env || true
-    echo "DB_CONNECTION=pgsql" >> .env
-    echo "CACHE_DRIVER=array" >> .env
-    echo "SESSION_DRIVER=array" >> .env
-    echo "QUEUE_CONNECTION=database" >> .env
-    rm -f bootstrap/cache/config.php bootstrap/cache/*.php
+    # Force correct drivers - remove any stale values first
+    sed -i '/^CACHE_STORE/d; /^CACHE_DRIVER/d; /^SESSION_DRIVER/d; /^QUEUE_CONNECTION/d; /^DB_CONNECTION/d' .env || true
+    printf "\nDB_CONNECTION=pgsql\nCACHE_STORE=array\nCACHE_DRIVER=array\nSESSION_DRIVER=array\nQUEUE_CONNECTION=database\n" >> .env
+    rm -f bootstrap/cache/*.php
     php artisan config:clear
     php artisan queue:work --sleep=3 --tries=3 --max-time=3600
   instance_count: 1
@@ -115,6 +109,8 @@ services:
   - key: QUEUE_CONNECTION
     value: database
   - key: CACHE_DRIVER
+    value: array
+  - key: CACHE_STORE
     value: array
   - key: SESSION_DRIVER
     value: array
