@@ -23,8 +23,7 @@ services:
     value: production
   - key: APP_DEBUG
     value: 'false'
-  - &id001
-    key: APP_KEY
+  - key: APP_KEY
     value: ''
     type: SECRET
     scope: RUN_AND_BUILD
@@ -66,57 +65,6 @@ services:
     value: '1'
   - key: NEXT_PUBLIC_API_URL
     value: ${APP_URL}
-- name: queue-worker
-  github:
-    repo: tigernethost/smo-student-portal
-    branch: main
-    deploy_on_push: true
-  source_dir: backend
-  environment_slug: php
-  build_command: mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions
-    storage/logs bootstrap/cache && rm -f bootstrap/cache/*.php && composer install
-    --no-dev --optimize-autoloader --ignore-platform-req=ext-intl
-  run_command: |
-    # Force correct drivers - remove any stale values first
-    sed -i '/^CACHE_STORE/d; /^CACHE_DRIVER/d; /^SESSION_DRIVER/d; /^QUEUE_CONNECTION/d; /^DB_CONNECTION/d' .env || true
-    printf "\nDB_CONNECTION=pgsql\nCACHE_STORE=array\nCACHE_DRIVER=array\nSESSION_DRIVER=array\nQUEUE_CONNECTION=database\n" >> .env
-    rm -f bootstrap/cache/*.php
-    php artisan config:clear
-    php artisan queue:work --sleep=3 --tries=3 --max-time=3600
-  instance_count: 1
-  instance_size_slug: apps-s-1vcpu-0.5gb
-  envs:
-  - key: APP_ENV
-    value: production
-  - key: APP_DEBUG
-    value: 'false'
-  - key: LOG_CHANNEL
-    value: stderr
-  - key: DB_CONNECTION
-    value: pgsql
-  - key: DB_HOST
-    value: ${portal-db.HOSTNAME}
-  - key: DB_PORT
-    value: ${portal-db.PORT}
-  - key: DB_DATABASE
-    value: ${portal-db.DATABASE}
-  - key: DB_USERNAME
-    value: ${portal-db.USERNAME}
-  - key: DB_PASSWORD
-    value: ${portal-db.PASSWORD}
-  - key: DB_SSLMODE
-    value: require
-  - key: QUEUE_CONNECTION
-    value: database
-  - key: CACHE_DRIVER
-    value: array
-  - key: CACHE_STORE
-    value: array
-  - key: SESSION_DRIVER
-    value: array
-  - key: DATABASE_URL
-    value: ${portal-db.DATABASE_URL}
-  - *id001
 jobs:
 - name: db-migrate
   kind: PRE_DEPLOY
