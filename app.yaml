@@ -24,9 +24,9 @@ services:
   - key: APP_DEBUG
     value: 'false'
   - key: APP_KEY
-    value: ''
+    value: 'base64:2Tjzam0XCys58ilxSF8r3lawhSH+nl62FYeLCx86lWc='
     type: SECRET
-    scope: RUN_AND_BUILD
+    scope: RUN_AND_BUILD_TIME
   - key: LOG_CHANNEL
     value: stderr
   - key: DB_CONNECTION
@@ -79,11 +79,32 @@ jobs:
     --ignore-platform-req=ext-intl
   run_command: php artisan migrate --force
   envs:
-  - key: DATABASE_URL
-    value: ${portal-db.DATABASE_URL}
+  - key: APP_KEY
+    value: 'base64:2Tjzam0XCys58ilxSF8r3lawhSH+nl62FYeLCx86lWc='
     scope: RUN_TIME
   - key: DB_CONNECTION
     value: pgsql
+    scope: RUN_TIME
+  - key: DB_HOST
+    value: ${portal-db.HOSTNAME}
+    scope: RUN_TIME
+  - key: DB_PORT
+    value: ${portal-db.PORT}
+    scope: RUN_TIME
+  - key: DB_DATABASE
+    value: ${portal-db.DATABASE}
+    scope: RUN_TIME
+  - key: DB_USERNAME
+    value: ${portal-db.USERNAME}
+    scope: RUN_TIME
+  - key: DB_PASSWORD
+    value: ${portal-db.PASSWORD}
+    scope: RUN_TIME
+  - key: DB_SSLMODE
+    value: require
+    scope: RUN_TIME
+  - key: DATABASE_URL
+    value: ${portal-db.DATABASE_URL}
     scope: RUN_TIME
 databases:
 - name: portal-db
