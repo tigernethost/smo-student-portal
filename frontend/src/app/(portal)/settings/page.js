@@ -13,9 +13,11 @@ export default function SettingsPage() {
   const [form, setForm]         = useState({ name: '', school_name: '' })
   const [pwForm, setPwForm]     = useState({ current: '', password: '', confirm: '' })
   const [parentLink, setParentLink] = useState(null)
+  const [token, setToken]           = useState(null)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
+    setToken(token)
     if (!token) return
     Promise.all([
       fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
