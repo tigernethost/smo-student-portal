@@ -6,8 +6,30 @@ const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 function authHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('parent_token') : ''
-  return { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json', 'Content-Type': 'application/json' }
+  return { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Content-Type': 'application/json' }
 }
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: #f8f7ff; }
+  .tab-btn { border: none; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s; }
+  .child-chip { border: none; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s; border-radius: 99px; }
+  .child-chip:hover { transform: translateY(-1px); }
+  .action-btn { border: none; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all .15s; border-radius: 12px; font-weight: 700; }
+  .action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+  .card { background: #fff; border-radius: 20px; border: 1px solid #f0eefd; box-shadow: 0 2px 16px rgba(108,99,255,.06); }
+  .subject-row { border-radius: 12px; transition: background .15s; cursor: pointer; }
+  .subject-row:hover { background: #f8f7ff; }
+  .notif-item { border-radius: 12px; transition: background .15s; }
+  .link-input {
+    width: 100%; background: #f8f7ff; border: 1.5px solid #e5e7eb;
+    border-radius: 12px; padding: 14px 16px; color: #1a1a2e;
+    font-size: 18px; outline: none; font-family: monospace; letter-spacing: .12em;
+    text-transform: uppercase; text-align: center;
+  }
+  .link-input:focus { border-color: #6c63ff; box-shadow: 0 0 0 3px rgba(108,99,255,.12); }
+`
 
 export default function ParentDashboard() {
   const router = useRouter()
@@ -16,11 +38,12 @@ export default function ParentDashboard() {
   const [selected, setSelected]   = useState(null)
   const [dashboard, setDashboard] = useState(null)
   const [notifs, setNotifs]       = useState([])
-  const [tab, setTab]             = useState('overview') // overview | performance | notifications
+  const [tab, setTab]             = useState('overview')
   const [loading, setLoading]     = useState(true)
   const [linkModal, setLinkModal] = useState(false)
   const [linkCode, setLinkCode]   = useState('')
   const [linkError, setLinkError] = useState('')
+  const [menuOpen, setMenuOpen]   = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('parent_token')
@@ -28,9 +51,7 @@ export default function ParentDashboard() {
     loadAll()
   }, [])
 
-  useEffect(() => {
-    if (selected) loadDashboard(selected.id)
-  }, [selected])
+  useEffect(() => { if (selected) loadDashboard(selected.id) }, [selected])
 
   const loadAll = async () => {
     setLoading(true)
@@ -46,9 +67,7 @@ export default function ParentDashboard() {
       setChildren(childData.children || [])
       setNotifs(notifData.notifications || [])
       if (childData.children?.length > 0) setSelected(childData.children[0])
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   const loadDashboard = async (id) => {
@@ -59,8 +78,7 @@ export default function ParentDashboard() {
 
   const logout = () => {
     fetch(API + '/api/parent/auth/logout', { method: 'POST', headers: authHeaders() })
-    localStorage.removeItem('parent_token')
-    localStorage.removeItem('parent_data')
+    localStorage.removeItem('parent_token'); localStorage.removeItem('parent_data')
     router.replace('/parent')
   }
 
@@ -82,225 +100,283 @@ export default function ParentDashboard() {
     setNotifs(n => n.map(x => ({...x, is_read: true})))
   }
 
-  const scoreColor = (pct) => pct >= 75 ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
-  const masteryBar = (pct) => (
-    <div style={{ height: 8, background: '#1e293b', borderRadius: 4, overflow: 'hidden' }}>
-      <div style={{ height: '100%', width: `${pct}%`, background: scoreColor(pct), borderRadius: 4, transition: 'width .5s' }} />
-    </div>
-  )
+  const scoreColor = (pct) => pct >= 75 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626'
+  const scoreBg    = (pct) => pct >= 75 ? '#dcfce7' : pct >= 40 ? '#fef3c7' : '#fee2e2'
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ color: '#64748b', fontSize: 16 }}>Loading parent portal...</div>
-    </div>
+    <>
+      <style>{css}</style>
+      <div style={{ minHeight: '100vh', background: '#f8f7ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>👨‍👩‍👧‍👦</div>
+          <p style={{ color: '#6b7280', fontFamily: "'Nunito',sans-serif", fontSize: 15 }}>Loading your dashboard…</p>
+        </div>
+      </div>
+    </>
   )
 
   const unread = notifs.filter(n => !n.is_read).length
+  const firstName = parent?.name?.split(' ')[0] || 'Parent'
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui,sans-serif' }}>
-      {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '0 20px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 22 }}>👨‍👩‍👧‍👦</span>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>SchoolMATE Parent Portal</div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Welcome, {parent?.name}</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={() => router.push('/parent/add-student')}
-              style={{ padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-              + Create Student
-            </button>
-            <button onClick={() => setLinkModal(true)}
-              style={{ padding: '6px 14px', background: '#334155', border: 'none', borderRadius: 8, color: '#94a3b8', cursor: 'pointer', fontSize: 13 }}>
-              Link Child
-            </button>
-            <button onClick={logout}
-              style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #334155', borderRadius: 8, color: '#64748b', cursor: 'pointer', fontSize: 13 }}>
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </div>
+    <>
+      <style>{css}</style>
+      <div style={{ minHeight: '100vh', background: '#f8f7ff', fontFamily: "'Nunito',sans-serif", color: '#1a1a2e' }}>
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px' }}>
-        {children.length === 0 ? (
-          /* No children linked */
-          <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🔗</div>
-            <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>No children linked yet</div>
-            <div style={{ color: '#64748b', marginBottom: 24 }}>Ask your child for their Parent Link Code from their student portal profile.</div>
-            <button onClick={() => setLinkModal(true)}
-              style={{ padding: '12px 28px', background: '#3b82f6', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 15 }}>
-              Link Your Child Now
-            </button>
-          </div>
-        ) : (<>
-          {/* Child Selector */}
-          {children.length > 1 && (
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20, overflowX: 'auto' }}>
-              {children.map(c => (
-                <button key={c.id} onClick={() => setSelected(c)}
-                  style={{ padding: '10px 18px', background: selected?.id === c.id ? '#3b82f6' : '#1e293b',
-                    border: `1px solid ${selected?.id === c.id ? '#3b82f6' : '#334155'}`,
-                    borderRadius: 10, color: '#f1f5f9', cursor: 'pointer', fontSize: 14, whiteSpace: 'nowrap' }}>
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Child Info Banner */}
-          {selected && (
-            <div style={{ background: 'linear-gradient(135deg,#1e3a5f,#1e293b)', border: '1px solid #1d4ed8', borderRadius: 14, padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        {/* Top Nav */}
+        <nav style={{ background: '#fff', borderBottom: '1px solid #f0eefd', padding: '0 20px', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 1px 8px rgba(108,99,255,.06)' }}>
+          <div style={{ maxWidth: 960, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+            {/* Brand */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg,#6c63ff,#a78bfa)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👨‍👩‍👧‍👦</div>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{selected.name}</div>
-                <div style={{ color: '#93c5fd', fontSize: 14, marginTop: 2 }}>
-                  {selected.grade_level} {selected.strand ? `· ${selected.strand}` : ''} {selected.school_name ? `· ${selected.school_name}` : ''}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 16 }}>
-                {[
-                  { label: 'Quizzes', value: dashboard?.stats?.total_quizzes ?? '—' },
-                  { label: 'Avg Score', value: dashboard?.stats?.avg_score != null ? `${dashboard.stats.avg_score}%` : '—' },
-                  { label: 'Mastered', value: dashboard?.stats?.mastered_topics ?? '—' },
-                  { label: 'At Risk', value: dashboard?.stats?.at_risk_topics ?? '—', color: dashboard?.stats?.at_risk_topics > 0 ? '#ef4444' : '#22c55e' },
-                ].map(s => (
-                  <div key={s.label} style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: s.color || '#f1f5f9' }}>{s.value}</div>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>{s.label}</div>
-                  </div>
-                ))}
+                <div style={{ fontWeight: 900, fontSize: 16, letterSpacing: '-0.3px', color: '#1a1a2e' }}>SchoolMATE</div>
+                <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>Parent Portal</div>
               </div>
             </div>
-          )}
 
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#1e293b', borderRadius: 10, padding: 4, width: 'fit-content' }}>
-            {[
-              { key: 'overview', label: '📊 Overview' },
-              { key: 'performance', label: '📚 Performance' },
-              { key: 'notifications', label: `🔔 Alerts${unread > 0 ? ` (${unread})` : ''}` },
-            ].map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                style={{ padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                  background: tab === t.key ? '#3b82f6' : 'transparent',
-                  color: tab === t.key ? '#fff' : '#64748b' }}>
-                {t.label}
+            {/* Actions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {unread > 0 && (
+                <button className="tab-btn" onClick={() => setTab('notifications')}
+                  style={{ position: 'relative', background: '#fef3c7', borderRadius: 10, padding: '6px 12px', fontSize: 13, fontWeight: 700, color: '#92400e' }}>
+                  🔔 {unread}
+                </button>
+              )}
+              <button className="action-btn" onClick={() => router.push('/parent/add-student')}
+                style={{ background: 'linear-gradient(135deg,#6c63ff,#a78bfa)', color: '#fff', padding: '8px 16px', fontSize: 13 }}>
+                + Add Student
               </button>
-            ))}
-          </div>
-
-          {/* OVERVIEW TAB */}
-          {tab === 'overview' && dashboard && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px,1fr))', gap: 16 }}>
-              {/* Subject Mastery */}
-              <div style={{ background: '#1e293b', borderRadius: 14, padding: 20, border: '1px solid #334155' }}>
-                <div style={{ fontWeight: 600, marginBottom: 16 }}>Subject Overview</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {(dashboard.subject_mastery || []).slice(0,6).map((s, i) => (
-                    <div key={i}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <div style={{ fontSize: 13 }}>{s.icon} {s.name}</div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: scoreColor(s.avg_mastery) }}>{s.avg_mastery}%</div>
-                      </div>
-                      {masteryBar(s.avg_mastery)}
-                      <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>{s.mastered}/{s.total} topics mastered</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent Quizzes */}
-              <div style={{ background: '#1e293b', borderRadius: 14, padding: 20, border: '1px solid #334155' }}>
-                <div style={{ fontWeight: 600, marginBottom: 16 }}>Recent Quizzes</div>
-                {(dashboard.recent_quizzes || []).length === 0 ? (
-                  <div style={{ color: '#64748b', fontSize: 13 }}>No quizzes taken yet.</div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {dashboard.recent_quizzes.map((q, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#0f172a', borderRadius: 8 }}>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 600 }}>{q.subject}</div>
-                          <div style={{ fontSize: 11, color: '#64748b' }}>{q.topic} · {q.date}</div>
-                        </div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor(q.pct) }}>{q.pct}%</div>
-                      </div>
+              <div style={{ position: 'relative' }}>
+                <button className="tab-btn" onClick={() => setMenuOpen(!menuOpen)}
+                  style={{ background: '#f8f7ff', borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 700, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {parent?.name?.split(' ')[0]} ▾
+                </button>
+                {menuOpen && (
+                  <div style={{ position: 'absolute', right: 0, top: '110%', background: '#fff', borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,.12)', border: '1px solid #f0eefd', minWidth: 180, padding: 8, zIndex: 200 }}>
+                    {[
+                      { label: '🔗 Link Another Child', action: () => { setLinkModal(true); setMenuOpen(false) } },
+                      { label: '⭐ Upgrade Plan', action: () => router.push('/parent/upgrade') },
+                      { label: '🚪 Sign Out', action: logout, danger: true },
+                    ].map((item, i) => (
+                      <button key={i} className="tab-btn" onClick={item.action}
+                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', borderRadius: 10, fontSize: 14, fontWeight: 600, color: item.danger ? '#dc2626' : '#374151', background: 'none' }}>
+                        {item.label}
+                      </button>
                     ))}
                   </div>
                 )}
               </div>
             </div>
-          )}
+          </div>
+        </nav>
 
-          {/* PERFORMANCE TAB */}
-          {tab === 'performance' && selected && (
-            <PerformanceTab studentId={selected.id} />
-          )}
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '24px 20px' }}>
 
-          {/* NOTIFICATIONS TAB */}
-          {tab === 'notifications' && (
-            <div style={{ background: '#1e293b', borderRadius: 14, padding: 20, border: '1px solid #334155' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ fontWeight: 600 }}>Notifications</div>
-                {unread > 0 && (
-                  <button onClick={readAll} style={{ fontSize: 12, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    Mark all read
+          {/* Greeting */}
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: '#1a1a2e', letterSpacing: '-0.5px' }}>Hello, {firstName}! 👋</h1>
+            <p style={{ color: '#6b7280', fontSize: 14, marginTop: 2 }}>Here's how your {children.length === 1 ? 'child is' : 'children are'} doing today.</p>
+          </div>
+
+          {children.length === 0 ? (
+            /* Empty state */
+            <div style={{ textAlign: 'center', padding: '80px 20px' }} className="card">
+              <div style={{ fontSize: 56, marginBottom: 16 }}>🔗</div>
+              <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 8 }}>No children linked yet</h2>
+              <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 24 }}>Ask your child for their Parent Link Code from their SchoolMATE profile.</p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button className="action-btn" onClick={() => setLinkModal(true)}
+                  style={{ background: 'linear-gradient(135deg,#6c63ff,#a78bfa)', color: '#fff', padding: '12px 28px', fontSize: 15 }}>
+                  🔗 Link with Code
+                </button>
+                <button className="action-btn" onClick={() => router.push('/parent/add-student')}
+                  style={{ background: '#f8f7ff', color: '#6c63ff', padding: '12px 28px', fontSize: 15, border: '2px solid #e0ddff' }}>
+                  ➕ Create Student Account
+                </button>
+              </div>
+            </div>
+          ) : (<>
+
+            {/* Child Selector */}
+            {children.length > 1 && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
+                {children.map(c => (
+                  <button key={c.id} className="child-chip" onClick={() => setSelected(c)}
+                    style={{ padding: '8px 20px', background: selected?.id === c.id ? 'linear-gradient(135deg,#6c63ff,#a78bfa)' : '#fff',
+                      color: selected?.id === c.id ? '#fff' : '#374151', fontWeight: 700, fontSize: 14,
+                      border: selected?.id === c.id ? 'none' : '1.5px solid #e5e7eb',
+                      boxShadow: selected?.id === c.id ? '0 4px 12px rgba(108,99,255,.3)' : 'none',
+                      whiteSpace: 'nowrap' }}>
+                    {c.name}
                   </button>
+                ))}
+              </div>
+            )}
+
+            {/* Child Hero Card */}
+            {selected && (
+              <div style={{ background: 'linear-gradient(135deg,#6c63ff 0%,#a78bfa 100%)', borderRadius: 24, padding: '24px 28px', marginBottom: 20, color: '#fff', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 32px rgba(108,99,255,.35)' }}>
+                <div style={{ position: 'absolute', top: -30, right: -30, width: 150, height: 150, background: 'rgba(255,255,255,.08)', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', bottom: -40, right: 60, width: 120, height: 120, background: 'rgba(255,255,255,.06)', borderRadius: '50%' }} />
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, position: 'relative' }}>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 700, opacity: .7, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Currently viewing</p>
+                    <h2 style={{ fontSize: 26, fontWeight: 900, margin: 0, letterSpacing: '-0.5px' }}>{selected.name}</h2>
+                    <p style={{ opacity: .8, fontSize: 14, marginTop: 4 }}>
+                      {selected.grade_level}{selected.strand ? ` · ${selected.strand}` : ''}{selected.school_name ? ` · ${selected.school_name}` : ''}
+                    </p>
+                    <button onClick={() => router.push(`/parent/children/${selected.id}`)}
+                      style={{ marginTop: 14, background: 'rgba(255,255,255,.2)', border: '1px solid rgba(255,255,255,.3)', borderRadius: 10, padding: '8px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                      View Full Report →
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', gap: 20 }}>
+                    {[
+                      { label: 'Quizzes', value: dashboard?.stats?.total_quizzes ?? '—' },
+                      { label: 'Avg Score', value: dashboard?.stats?.avg_score != null ? `${dashboard.stats.avg_score}%` : '—' },
+                      { label: 'Mastered', value: dashboard?.stats?.mastered_topics ?? '—', emoji: '🎯' },
+                      { label: 'At Risk', value: dashboard?.stats?.at_risk_topics ?? '—', emoji: '⚠️', warn: dashboard?.stats?.at_risk_topics > 0 },
+                    ].map(s => (
+                      <div key={s.label} style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: s.warn ? '#fcd34d' : '#fff' }}>{s.value}</div>
+                        <div style={{ fontSize: 11, opacity: .7, fontWeight: 600 }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#fff', borderRadius: 14, padding: 4, width: 'fit-content', border: '1px solid #f0eefd' }}>
+              {[
+                { key: 'overview', label: '📊 Overview' },
+                { key: 'performance', label: '📚 Performance' },
+                { key: 'notifications', label: `🔔 Alerts${unread > 0 ? ` · ${unread}` : ''}` },
+              ].map(t => (
+                <button key={t.key} className="tab-btn" onClick={() => setTab(t.key)}
+                  style={{ padding: '9px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+                    background: tab === t.key ? 'linear-gradient(135deg,#6c63ff,#a78bfa)' : 'transparent',
+                    color: tab === t.key ? '#fff' : '#9ca3af',
+                    boxShadow: tab === t.key ? '0 2px 8px rgba(108,99,255,.3)' : 'none' }}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* OVERVIEW */}
+            {tab === 'overview' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 16 }}>
+
+                {/* Subject Mastery */}
+                <div className="card" style={{ padding: 24 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 20, color: '#1a1a2e' }}>Subject Overview</h3>
+                  {(dashboard?.subject_mastery || []).length === 0 ? (
+                    <p style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>No data yet. Your child needs to take some quizzes first.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      {(dashboard.subject_mastery || []).slice(0,6).map((s, i) => (
+                        <div key={i}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <span style={{ fontSize: 13, fontWeight: 700 }}>{s.icon} {s.name}</span>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: scoreColor(s.avg_mastery), background: scoreBg(s.avg_mastery), padding: '2px 8px', borderRadius: 99 }}>{s.avg_mastery}%</span>
+                          </div>
+                          <div style={{ height: 7, background: '#f0eefd', borderRadius: 99, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${s.avg_mastery}%`, background: s.avg_mastery >= 75 ? '#16a34a' : s.avg_mastery >= 40 ? '#d97706' : '#dc2626', borderRadius: 99, transition: 'width .6s ease' }} />
+                          </div>
+                          <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 3 }}>{s.mastered}/{s.total} topics mastered</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Recent Quizzes */}
+                <div className="card" style={{ padding: 24 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, marginBottom: 20, color: '#1a1a2e' }}>Recent Quizzes</h3>
+                  {(dashboard?.recent_quizzes || []).length === 0 ? (
+                    <p style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', padding: '20px 0' }}>No quizzes taken yet.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {(dashboard.recent_quizzes || []).map((q, i) => (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#f8f7ff', borderRadius: 12 }}>
+                          <div>
+                            <p style={{ fontSize: 13, fontWeight: 700 }}>{q.subject}</p>
+                            <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>{q.topic} · {q.date}</p>
+                          </div>
+                          <span style={{ fontSize: 15, fontWeight: 900, color: scoreColor(q.pct), background: scoreBg(q.pct), padding: '4px 10px', borderRadius: 99 }}>{q.pct}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* PERFORMANCE */}
+            {tab === 'performance' && selected && <PerformanceTab studentId={selected.id} />}
+
+            {/* NOTIFICATIONS */}
+            {tab === 'notifications' && (
+              <div className="card" style={{ padding: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800 }}>Notifications</h3>
+                  {unread > 0 && (
+                    <button className="tab-btn" onClick={readAll}
+                      style={{ fontSize: 13, color: '#6c63ff', background: '#ede9fe', borderRadius: 8, padding: '6px 12px', fontWeight: 700 }}>
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                {notifs.length === 0 ? (
+                  <p style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', padding: '40px 0' }}>No notifications yet.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {notifs.map((n, i) => (
+                      <div key={i} className="notif-item" style={{ padding: '14px 16px', background: n.is_read ? '#fafafa' : '#f5f3ff', borderRadius: 12, borderLeft: `3px solid ${n.is_read ? '#e5e7eb' : '#6c63ff'}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <p style={{ fontWeight: 700, fontSize: 14 }}>{n.title}</p>
+                          <p style={{ fontSize: 11, color: '#9ca3af' }}>{n.created_at}</p>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#6b7280' }}>{n.body}</p>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-              {notifs.length === 0 ? (
-                <div style={{ color: '#64748b', fontSize: 14, textAlign: 'center', padding: 40 }}>No notifications yet.</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {notifs.map((n, i) => (
-                    <div key={i} style={{ padding: '12px 14px', background: n.is_read ? '#0f172a' : '#1e3a5f', borderRadius: 10, borderLeft: `3px solid ${n.is_read ? '#334155' : '#3b82f6'}` }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <div style={{ fontWeight: 600, fontSize: 13 }}>{n.title}</div>
-                        <div style={{ fontSize: 11, color: '#64748b' }}>{n.created_at}</div>
-                      </div>
-                      <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>{n.body}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </>)}
-      </div>
+            )}
+          </>)}
+        </div>
 
-      {/* Link Child Modal */}
-      {linkModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: 20 }}>
-          <div style={{ background: '#1e293b', borderRadius: 16, padding: 32, width: '100%', maxWidth: 400, border: '1px solid #334155' }}>
-            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Link Another Child</div>
-            <div style={{ color: '#64748b', fontSize: 13, marginBottom: 20 }}>Ask your child for their Parent Link Code from their student portal profile.</div>
-            <input value={linkCode} onChange={e => setLinkCode(e.target.value.toUpperCase())}
-              placeholder="e.g. AB12CD34"
-              style={{ width: '100%', padding: '12px 16px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#f1f5f9', fontSize: 16, fontFamily: 'monospace', letterSpacing: 3, boxSizing: 'border-box', marginBottom: 12 }} />
-            {linkError && <div style={{ color: '#fca5a5', fontSize: 13, marginBottom: 12 }}>{linkError}</div>}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { setLinkModal(false); setLinkCode(''); setLinkError('') }}
-                style={{ flex: 1, padding: 12, background: '#334155', border: 'none', borderRadius: 10, color: '#f1f5f9', cursor: 'pointer' }}>
-                Cancel
-              </button>
-              <button onClick={linkChild}
-                style={{ flex: 1, padding: 12, background: '#3b82f6', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-                Link
-              </button>
+        {/* Link Modal */}
+        {linkModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999, padding: 20 }} onClick={() => setLinkModal(false)}>
+            <div style={{ background: '#fff', borderRadius: 24, padding: 32, width: '100%', maxWidth: 400, boxShadow: '0 24px 64px rgba(0,0,0,.15)' }} onClick={e => e.stopPropagation()}>
+              <div style={{ fontSize: 36, textAlign: 'center', marginBottom: 12 }}>🔗</div>
+              <h2 style={{ fontSize: 20, fontWeight: 900, textAlign: 'center', marginBottom: 6 }}>Link Another Child</h2>
+              <p style={{ color: '#6b7280', fontSize: 14, textAlign: 'center', marginBottom: 24 }}>Ask your child for their Parent Link Code from their student portal profile.</p>
+              <input className="link-input" value={linkCode} onChange={e => setLinkCode(e.target.value.toUpperCase())} placeholder="AB12CD34" />
+              {linkError && <p style={{ color: '#dc2626', fontSize: 13, marginTop: 8, textAlign: 'center', fontWeight: 600 }}>{linkError}</p>}
+              <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                <button className="action-btn" onClick={() => { setLinkModal(false); setLinkCode(''); setLinkError('') }}
+                  style={{ flex: 1, padding: 13, background: '#f8f7ff', color: '#374151', fontSize: 15, border: '1.5px solid #e5e7eb' }}>Cancel</button>
+                <button className="action-btn" onClick={linkChild}
+                  style={{ flex: 1, padding: 13, background: 'linear-gradient(135deg,#6c63ff,#a78bfa)', color: '#fff', fontSize: 15 }}>Link Child</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* Menu overlay */}
+        {menuOpen && <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setMenuOpen(false)} />}
+      </div>
+    </>
   )
 }
 
 function PerformanceTab({ studentId }) {
-  const [data, setData] = useState(null)
+  const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
 
@@ -309,53 +385,46 @@ function PerformanceTab({ studentId }) {
       .then(r => r.json()).then(d => { setData(d); setLoading(false) })
   }, [studentId])
 
-  const scoreColor = (pct) => pct >= 75 ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
+  const scoreColor = (pct) => pct >= 75 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626'
+  const scoreBg    = (pct) => pct >= 75 ? '#dcfce7' : pct >= 40 ? '#fef3c7' : '#fee2e2'
+  const dotColor   = (t) => t.attempts === 0 ? '#d1d5db' : t.mastery >= 75 ? '#16a34a' : t.mastery >= 40 ? '#d97706' : '#dc2626'
 
-  if (loading) return <div style={{ color: '#64748b', padding: 40, textAlign: 'center' }}>Loading performance data...</div>
-  if (!data?.subjects?.length) return <div style={{ color: '#64748b', padding: 40, textAlign: 'center' }}>No performance data yet. Your child needs to take some quizzes first.</div>
+  if (loading) return <div style={{ color: '#9ca3af', padding: '40px 0', textAlign: 'center' }}>Loading…</div>
+  if (!data?.subjects?.length) return <div style={{ color: '#9ca3af', padding: '60px 0', textAlign: 'center' }}>No quiz data yet. Encourage your child to take some quizzes!</div>
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {data.subjects.map((s, i) => (
-        <div key={i} style={{ background: '#1e293b', borderRadius: 14, border: '1px solid #334155', overflow: 'hidden' }}>
-          {/* Subject Header */}
-          <div onClick={() => setExpanded(expanded === i ? null : i)}
-            style={{ padding: '16px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 22 }}>{s.icon || '📚'}</span>
+        <div key={i} className="card" style={{ overflow: 'hidden' }}>
+          <div className="subject-row" onClick={() => setExpanded(expanded === i ? null : i)}
+            style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ fontSize: 26 }}>{s.icon || '📚'}</span>
               <div>
-                <div style={{ fontWeight: 600 }}>{s.name}</div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>
+                <p style={{ fontWeight: 800, fontSize: 15 }}>{s.name}</p>
+                <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>
                   {s.status.mastered} mastered · {s.status.at_risk} at risk · {s.status.not_started} not started
-                </div>
+                </p>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: scoreColor(s.avg_mastery) }}>{s.avg_mastery}%</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>avg mastery</div>
-              </div>
-              <div style={{ color: '#64748b', fontSize: 18 }}>{expanded === i ? '▲' : '▼'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ fontSize: 16, fontWeight: 900, color: scoreColor(s.avg_mastery), background: scoreBg(s.avg_mastery), padding: '4px 12px', borderRadius: 99 }}>{s.avg_mastery}%</span>
+              <span style={{ color: '#9ca3af', fontSize: 14, fontWeight: 700 }}>{expanded === i ? '▲' : '▼'}</span>
             </div>
           </div>
-
-          {/* Topic List */}
           {expanded === i && (
-            <div style={{ borderTop: '1px solid #334155', padding: '12px 20px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {Object.entries(
-                s.topics.reduce((acc, t) => { const q = `Q${t.quarter||1}`; if(!acc[q]) acc[q]=[]; acc[q].push(t); return acc }, {})
-              ).map(([quarter, topics]) => (
-                <div key={quarter}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>{quarter}</div>
+            <div style={{ borderTop: '1px solid #f0eefd', padding: '16px 24px 20px', background: '#fafafa' }}>
+              {Object.entries(s.topics.reduce((acc, t) => { const q = `Quarter ${t.quarter||1}`; if(!acc[q]) acc[q]=[]; acc[q].push(t); return acc }, {})).map(([quarter, topics]) => (
+                <div key={quarter} style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 11, color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>{quarter}</p>
                   {topics.map((t, j) => (
-                    <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0', borderBottom: '1px solid #0f172a' }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                        background: t.mastery >= 75 ? '#22c55e' : t.attempts === 0 ? '#475569' : t.mastery >= 40 ? '#f59e0b' : '#ef4444' }} />
-                      <div style={{ flex: 1, fontSize: 13 }}>{t.name}</div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>{t.attempts} quiz{t.attempts !== 1 ? 'zes' : ''}</div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: t.attempts === 0 ? '#475569' : scoreColor(t.mastery), minWidth: 38, textAlign: 'right' }}>
+                    <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '7px 0', borderBottom: '1px solid #f0f0f0' }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: dotColor(t) }} />
+                      <p style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{t.name}</p>
+                      <p style={{ fontSize: 12, color: '#9ca3af' }}>{t.attempts} quiz{t.attempts !== 1 ? 'zes' : ''}</p>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: t.attempts === 0 ? '#d1d5db' : scoreColor(t.mastery), minWidth: 44, textAlign: 'right' }}>
                         {t.attempts === 0 ? '—' : `${t.mastery}%`}
-                      </div>
+                      </span>
                     </div>
                   ))}
                 </div>

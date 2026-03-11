@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+// Design: Nunito font system
 import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 
@@ -81,7 +82,9 @@ export default function AddStudentPage() {
 
   // Success screen
   if (inviteData) return (
-    <div style={{ minHeight:'100vh', background:'#f0fdf4', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
+    <>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap'); * { box-sizing:border-box; }`}</style>
+    <div style={{ fontFamily:"'Nunito',sans-serif", minHeight:'100vh', background:'#f0fdf4', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px' }}>
       <div style={{ background:'#fff', borderRadius:'20px', padding:'40px', maxWidth:'480px', width:'100%', boxShadow:'0 4px 24px rgba(0,0,0,0.08)', textAlign:'center' }}>
         <div style={{ fontSize:'64px', marginBottom:'16px' }}>🎉</div>
         <h2 style={{ fontSize:'24px', fontWeight:'700', color:'#111', marginBottom:'8px' }}>Student Account Created!</h2>
@@ -148,7 +151,9 @@ export default function AddStudentPage() {
   );
 
   return (
-    <div style={{ minHeight:'100vh', background:'#fafafa', padding:'20px' }}>
+    <>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap'); * { box-sizing:border-box; }`}</style>
+    <div style={{ fontFamily:"'Nunito',sans-serif", minHeight:'100vh', background:'#fafafa', padding:'20px' }}>
       <div style={{ maxWidth:'480px', margin:'0 auto' }}>
 
         {/* Header */}
