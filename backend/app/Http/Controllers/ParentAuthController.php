@@ -6,6 +6,7 @@ use App\Models\ParentStudentLink;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class ParentAuthController extends Controller
 {
@@ -123,6 +124,74 @@ class ParentAuthController extends Controller
             'message' => "Linked to {$student->name}",
             'student' => ['id' => $student->id, 'name' => $student->name, 'grade_level' => $student->grade_level],
         ]);
+    }
+
+
+    // GET /api/parent/auth/social/{provider}
+    // Redirects parent to Google/Facebook OAuth
+    public function socialRedirect(string $provider)
+    {
+        if (!in_array($provider, ['google', 'facebook'])) {
+            return response()->json(['error' => 'Unsupported provider.'], 400);
+        }
+
+        $driver = $provider . '_parent';
+        $redirectUrl = \Laravel\Socialite\Facades\Socialite::driver($driver)
+            ->stateless()
+            ->redirect()
+            ->getTargetUrl();
+
+        return response()->json(['redirect_url' => $redirectUrl]);
+    }
+
+    // GET /api/parent/auth/callback/{provider}?code=...
+    // Handles OAuth callback and returns parent token
+    public function socialCallback(Request $request, string $provider)
+    {
+        if (!in_array($provider, ['google', 'facebook'])) {
+            return response()->json(['error' => 'Unsupported provider.'], 400);
+        }
+
+        try {
+            $driver = $provider . '_parent';
+            $socialUser = \Laravel\Socialite\Facades\Socialite::driver($driver)
+                ->stateless()
+                ->user();
+        } catch (\Exception $e) {
+            $frontendUrl = env('FRONTEND_URL', 'https://portal.schoolmate-online.net');
+            return redirect("{$frontendUrl}/parent/login?error=oauth_failed");
+        }
+
+        $email    = $socialUser->getEmail();
+        $name     = $socialUser->getName() ?: $socialUser->getNickname() ?: 'Parent';
+        $avatar   = $socialUser->getAvatar();
+        $socialId = $socialUser->getId();
+
+        // Find or create parent account
+        $parent = ParentAccount::where('email', $email)->first();
+
+        if (!$parent) {
+            // New parent — create account (no link code required for social login)
+            $parent = ParentAccount::create([
+                'name'              => $name,
+                'email'             => $email,
+                'password'          => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(32)),
+                'avatar'            => $avatar,
+                $provider . '_id'   => $socialId,
+            ]);
+        } else {
+            // Update social ID and avatar
+            $parent->update([
+                'avatar'          => $avatar ?? $parent->avatar,
+                $provider . '_id' => $socialId,
+            ]);
+        }
+
+        $token = $parent->createToken('parent-token')->plainTextToken;
+        $frontendUrl = env('FRONTEND_URL', 'https://portal.schoolmate-online.net');
+
+        // Redirect to frontend with token
+        return redirect("{$frontendUrl}/parent/auth/callback?token={$token}&provider={$provider}");
     }
 
     private function formatParent(ParentAccount $parent): array

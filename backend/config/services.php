@@ -17,6 +17,16 @@ return [
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY', ''),
     ],
+    'google_parent' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('APP_URL', 'https://portal.schoolmate-online.net/api') . '/parent/auth/callback/google',
+    ],
+    'facebook_parent' => [
+        'client_id'     => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect'      => env('APP_URL', 'https://portal.schoolmate-online.net/api') . '/parent/auth/callback/facebook',
+    ],
     'google' => [
         'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

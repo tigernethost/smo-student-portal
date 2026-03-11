@@ -159,6 +159,8 @@ use App\Http\Controllers\ParentDashboardController;
 
 // Public — register & login
 Route::prefix('parent/auth')->group(function () {
+    Route::get('/social/{provider}',          [App\Http\Controllers\ParentAuthController::class, 'socialRedirect']);
+    Route::get('/callback/{provider}',        [App\Http\Controllers\ParentAuthController::class, 'socialCallback']);
     Route::post('/register', [ParentAuthController::class, 'register']);
     Route::post('/login',    [ParentAuthController::class, 'login']);
 });
