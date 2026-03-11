@@ -318,4 +318,108 @@ class SubscriptionController extends Controller
             'internal_ref'  => $internalRef,
         ]);
     }
+
+    /**
+     * GET /api/parent/subscription/status
+     * Returns current parent plan, student limits, and billing info.
+     */
+    public function parentStatus(Request $request)
+    {
+        $parent = $request->user();
+        $limits = ['free' => 1, 'basic' => 3, 'pro' => PHP_INT_MAX];
+        $tier   = $parent->subscription_tier ?? 'free';
+        $limit  = $limits[$tier] ?? 1;
+        $count  = $parent->students()->count();
+
+        return response()->json([
+            'tier'         => $tier,
+            'student_count'=> $count,
+            'student_limit'=> $limit === PHP_INT_MAX ? null : $limit,
+            'can_add_more' => $count < $limit,
+            'plans'        => [
+                ['id'=>'basic','label'=>'Basic','price'=>99, 'students'=>3,  'description'=>'Up to 3 students, priority support'],
+                ['id'=>'pro',  'label'=>'Pro',  'price'=>199,'students'=>null,'description'=>'Unlimited students, all features'],
+            ],
+        ]);
+    }
+
+    /**
+     * POST /api/parent/subscription/checkout
+     * Parent upgrades their own account to add more student slots.
+     * Body: { plan: 'basic'|'pro' }
+     */
+    public function parentUpgradeCheckout(Request $request)
+    {
+        $request->validate(['plan' => 'required|in:basic,pro']);
+        $parent = $request->user();
+        $plan   = $request->plan;
+
+        $planConfig = [
+            'basic' => ['amount' => 99,  'students' => 3,   'label' => 'SchoolMATE Parent Basic'],
+            'pro'   => ['amount' => 199, 'students' => null, 'label' => 'SchoolMATE Parent Pro'],
+        ];
+        $config      = $planConfig[$plan];
+        $internalRef = 'SMO-PAR-UP-' . strtoupper(\Illuminate\Support\Str::random(8)) . '-' . $parent->id;
+
+        $merchantId  = env('PAYNAMICS_MERCHANT_ID', '');
+        $merchantKey = env('PAYNAMICS_MERCHANT_KEY', '');
+        $appUrl      = env('APP_URL', 'https://portal.schoolmate-online.net/api');
+        $frontendUrl = env('FRONTEND_URL', 'https://portal.schoolmate-online.net');
+
+        // Store pending parent subscription
+        \Illuminate\Support\Facades\DB::table('parent_subscriptions')->insert([
+            'parent_id'   => $parent->id,
+            'plan'        => $plan,
+            'status'      => 'pending',
+            'gateway'     => 'paynamics',
+            'gateway_ref' => $internalRef,
+            'amount'      => $config['amount'],
+            'starts_at'   => null,
+            'expires_at'  => null,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        // Demo mode if Paynamics not configured
+        if (!$merchantId || !$merchantKey) {
+            // In demo mode, immediately upgrade the parent tier
+            $parent->update(['subscription_tier' => $plan]);
+            return response()->json([
+                'demo_mode'    => true,
+                'message'      => "Demo mode: Your account has been upgraded to {$plan}!",
+                'plan'         => $plan,
+                'amount'       => $config['amount'],
+                'redirect'     => $frontendUrl . '/parent/upgrade/success?plan=' . $plan,
+            ]);
+        }
+
+        $amountStr   = number_format($config['amount'], 2, '.', '');
+        $requestBody = '<?xml version="1.0" encoding="utf-8" ?><paymentrequest>'
+            . '<mid>' . $merchantId . '</mid>'
+            . '<request_id>' . $internalRef . '</request_id>'
+            . '<ip_address>0.0.0.0</ip_address>'
+            . '<notification_url>' . $appUrl . '/subscription/webhook</notification_url>'
+            . '<response_url>' . $frontendUrl . '/parent/upgrade/success?ref=' . $internalRef . '</response_url>'
+            . '<cancel_url>' . $frontendUrl . '/parent/upgrade</cancel_url>'
+            . '<descriptor>' . $config['label'] . '</descriptor>'
+            . '<fname>' . e($parent->name) . '</fname>'
+            . '<lname></lname>'
+            . '<email>' . e($parent->email) . '</email>'
+            . '<amount>' . $amountStr . '</amount>'
+            . '<currency>PHP</currency>'
+            . '</paymentrequest>';
+
+        $signature = hash('sha512', $merchantId . $internalRef . $amountStr . 'PHP' . $merchantKey);
+
+        return response()->json([
+            'paynamics_url' => 'https://www.paynamics.net/ptiwebpayment/Default.aspx',
+            'request_body'  => base64_encode($requestBody),
+            'signature'     => $signature,
+            'internal_ref'  => $internalRef,
+        ]);
+    }
+
 }
+
+// NOTE: The closing brace above belongs to the class.
+// This file is appended - the methods below must be added inside the class manually.

@@ -176,6 +176,10 @@ Route::prefix('parent')->middleware('auth:sanctum')->group(function () {
     Route::get('/notifications',                     [ParentDashboardController::class, 'notifications']);
     Route::post('/notifications/read-all',           [ParentDashboardController::class, 'readAllNotifications']);
 
+    // Parent subscription
+    Route::get('/subscription/status',           [App\Http\Controllers\SubscriptionController::class, 'parentStatus']);
+    Route::post('/subscription/checkout',         [App\Http\Controllers\SubscriptionController::class, 'parentUpgradeCheckout']);
+
     // Parent-created student accounts
     Route::post('/students/create',                  [App\Http\Controllers\ParentStudentController::class, 'createStudent']);
     Route::get('/students',                          [App\Http\Controllers\ParentStudentController::class, 'listStudents']);
