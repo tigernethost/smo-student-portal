@@ -175,7 +175,16 @@ Route::prefix('parent')->middleware('auth:sanctum')->group(function () {
 
     Route::get('/notifications',                     [ParentDashboardController::class, 'notifications']);
     Route::post('/notifications/read-all',           [ParentDashboardController::class, 'readAllNotifications']);
+
+    // Parent-created student accounts
+    Route::post('/students/create',                  [App\Http\Controllers\ParentStudentController::class, 'createStudent']);
+    Route::get('/students',                          [App\Http\Controllers\ParentStudentController::class, 'listStudents']);
+    Route::post('/students/{id}/resend-invite',      [App\Http\Controllers\ParentStudentController::class, 'resendInvite']);
 });
+
+// Public invite routes (no auth)
+Route::get('/invite/{token}',           [App\Http\Controllers\ParentStudentController::class, 'getInvite']);
+Route::post('/invite/{token}/accept',   [App\Http\Controllers\ParentStudentController::class, 'acceptInvite']);
 
 // Student — generate their own parent link code
 Route::middleware('auth:sanctum')->post('/student/parent-link-code', function () {

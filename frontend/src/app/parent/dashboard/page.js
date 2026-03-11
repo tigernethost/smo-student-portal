@@ -110,9 +110,13 @@ export default function ParentDashboard() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button onClick={() => router.push('/parent/add-student')}
+              style={{ padding: '6px 14px', background: '#3b82f6', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+              + Create Student
+            </button>
             <button onClick={() => setLinkModal(true)}
               style={{ padding: '6px 14px', background: '#334155', border: 'none', borderRadius: 8, color: '#94a3b8', cursor: 'pointer', fontSize: 13 }}>
-              + Link Child
+              Link Child
             </button>
             <button onClick={logout}
               style={{ padding: '6px 14px', background: 'transparent', border: '1px solid #334155', borderRadius: 8, color: '#64748b', cursor: 'pointer', fontSize: 13 }}>
