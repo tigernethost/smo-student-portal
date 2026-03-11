@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import QRCode from 'qrcode';
 
 const GRADE_LEVELS = [
   'Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6',
@@ -15,6 +16,8 @@ export default function AddStudentPage() {
   const [inviteData, setInviteData] = useState(null);
   const [copied, setCopied] = useState(false);
   const [parentInfo, setParentInfo] = useState(null);
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const qrRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('parent_token');
@@ -43,6 +46,15 @@ export default function AddStudentPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Failed to create student account.'); return; }
       setInviteData(data);
+      // Generate QR code
+      try {
+        const url = await QRCode.toDataURL(data.invite_link, {
+          width: 240,
+          margin: 2,
+          color: { dark: '#111111', light: '#ffffff' },
+        });
+        setQrDataUrl(url);
+      } catch (e) { console.error('QR error', e); }
     } catch { setError('Network error. Please try again.'); }
     finally { setLoading(false); }
   };
@@ -58,6 +70,13 @@ export default function AddStudentPage() {
       `Hi ${inviteData.student.name}! 👋\n\nYour parent has created a SchoolMATE student account for you.\n\nClick this link to set up your account:\n${inviteData.invite_link}\n\nThis link expires in 7 days.`
     );
     window.open(`https://wa.me/?text=${msg}`, '_blank');
+  };
+
+  const downloadQR = () => {
+    const a = document.createElement('a');
+    a.href = qrDataUrl;
+    a.download = `schoolmate-invite-${inviteData?.student?.name?.replace(/\s+/g,'-')}.png`;
+    a.click();
   };
 
   // Success screen
@@ -78,6 +97,22 @@ export default function AddStudentPage() {
             {copied ? '✓ Copied!' : '📋 Copy Link'}
           </button>
         </div>
+
+        {/* QR Code */}
+        {qrDataUrl && (
+          <div style={{ marginBottom:'20px' }}>
+            <p style={{ fontSize:'12px', color:'#666', textTransform:'uppercase', letterSpacing:'0.05em', marginBottom:'10px' }}>Or share via QR Code</p>
+            <div style={{ background:'#fff', border:'2px solid #e5e7eb', borderRadius:'16px', padding:'20px', display:'flex', flexDirection:'column', alignItems:'center', gap:'12px' }}>
+              <img src={qrDataUrl} alt="Invite QR Code" style={{ width:'180px', height:'180px', borderRadius:'8px' }} />
+              <p style={{ fontSize:'12px', color:'#666', margin:0, textAlign:'center' }}>
+                Student scans this with their phone camera to activate their account
+              </p>
+              <button onClick={downloadQR} style={{ background:'#f3f4f6', color:'#111', border:'none', borderRadius:'8px', padding:'8px 20px', cursor:'pointer', fontSize:'13px', fontWeight:'600' }}>
+                📥 Download QR Code
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Share Options */}
         <div style={{ display:'flex', gap:'10px', marginBottom:'24px' }}>
