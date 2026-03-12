@@ -138,7 +138,7 @@ class ParentAuthController extends Controller
         $appUrl = env('APP_URL', 'https://portal.schoolmate-online.net/api');
         $redirectUrl = \Laravel\Socialite\Facades\Socialite::driver($provider)
             ->stateless()
-            ->with(['redirect_uri' => $appUrl . '/parent/auth/callback/' . $provider])
+            ->redirectUrl($appUrl . '/parent/auth/callback/' . $provider)
             ->redirect()
             ->getTargetUrl();
 
