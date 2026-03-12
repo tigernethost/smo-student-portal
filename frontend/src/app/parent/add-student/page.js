@@ -148,6 +148,7 @@ export default function AddStudentPage() {
         </div>
       </div>
     </div>
+    </>
   );
 
   return (
@@ -275,5 +276,6 @@ export default function AddStudentPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
