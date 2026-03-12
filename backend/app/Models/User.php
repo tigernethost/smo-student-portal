@@ -21,6 +21,8 @@ class User extends Authenticatable implements FilamentUser
         'plan', 'ai_quota_used', 'ai_quota_limit', 'ai_quota_reset_at',
         'parent_payment_token',
         'parent_link_code',
+        'created_by_parent',
+        'created_by_parent_id',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -30,6 +32,7 @@ class User extends Authenticatable implements FilamentUser
         'password'          => 'hashed',
         'onboarding_done'   => 'boolean',
         'is_admin'          => 'boolean',
+        'created_by_parent' => 'boolean',
         'ai_quota_used'     => 'integer',
         'ai_quota_limit'    => 'integer',
         'ai_quota_reset_at' => 'datetime',
