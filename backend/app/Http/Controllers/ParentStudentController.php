@@ -63,7 +63,7 @@ class ParentStudentController extends Controller
             'parent_link_code'  => $linkCode,
             'created_by_parent' => true,
             'created_by_parent_id' => $parent->id,
-            'onboarding_completed' => false,
+            'onboarding_done' => false,
         ]);
 
         // Link parent to student with invite token
@@ -205,7 +205,7 @@ class ParentStudentController extends Controller
         return response()->json([
             'message'  => 'Account activated successfully! Welcome to SchoolMATE.',
             'token'    => $authToken,
-            'redirect' => $student->onboarding_completed ? '/dashboard' : '/onboarding',
+            'redirect' => $student->onboarding_done ? '/dashboard' : '/onboarding',
             'user'     => [
                 'id'         => $student->id,
                 'name'       => $student->name,
