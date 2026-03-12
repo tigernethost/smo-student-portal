@@ -88,6 +88,37 @@ Route::post('/auth/facebook/deletion', [App\Http\Controllers\DataDeletionControl
 Route::get('/deletion-status',         [App\Http\Controllers\DataDeletionController::class, 'deletionStatus']);
 
 // One-time setup endpoint (protected by secret key)
+
+Route::post('/setup/test-create-student', function(\Illuminate\Http\Request $request) {
+    $secret  = request()->header('X-Setup-Key');
+    $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
+    if ($secret !== $allowed) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    try {
+        $inviteToken = \Illuminate\Support\Str::random(32);
+        $expiresAt   = now()->addDays(7);
+        $tempPassword = \Illuminate\Support\Str::random(16);
+        $linkCode     = strtoupper(\Illuminate\Support\Str::random(8));
+
+        $student = \App\Models\User::create([
+            'name'              => 'Test Student Debug',
+            'email'             => 'pending_' . $inviteToken . '@invite.schoolmate',
+            'password'          => \Illuminate\Support\Facades\Hash::make($tempPassword),
+            'grade_level'       => 'Grade 1',
+            'school_name'       => 'Test School',
+            'parent_link_code'  => $linkCode,
+            'created_by_parent' => true,
+            'created_by_parent_id' => 1,
+            'onboarding_done' => false,
+        ]);
+
+        return response()->json(['success' => true, 'student_id' => $student->id]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+    }
+});
+
 Route::post('/setup/db-check', function() {
     $secret  = request()->header('X-Setup-Key');
     $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
