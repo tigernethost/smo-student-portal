@@ -1,15 +1,17 @@
 'use client'
-import { Suspense } from 'react'
-import ParentLoginInner from './ParentLoginInner'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function ParentLoginPage() {
+export default function ParentIndex() {
+  const router = useRouter()
+  useEffect(() => {
+    const token = localStorage.getItem('parent_token')
+    if (token) router.replace('/parent/dashboard')
+    else router.replace('/parent/login')
+  }, [])
   return (
-    <Suspense fallback={
-      <div style={{ minHeight:'100vh', background:'#0f172a', display:'flex', alignItems:'center', justifyContent:'center' }}>
-        <div style={{ color:'#64748b' }}>Loading...</div>
-      </div>
-    }>
-      <ParentLoginInner />
-    </Suspense>
+    <div style={{ minHeight:'100vh', background:'#f8f7ff', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <p style={{ color:'#9ca3af', fontFamily:'sans-serif' }}>Loading...</p>
+    </div>
   )
 }

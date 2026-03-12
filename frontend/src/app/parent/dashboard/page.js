@@ -47,7 +47,7 @@ export default function ParentDashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem('parent_token')
-    if (!token) { router.replace('/parent'); return }
+    if (!token) { router.replace('/parent/login'); return }
     loadAll()
   }, [])
 
@@ -61,7 +61,7 @@ export default function ParentDashboard() {
         fetch(API + '/api/parent/children', { headers: authHeaders() }),
         fetch(API + '/api/parent/notifications', { headers: authHeaders() }),
       ])
-      if (meRes.status === 401) { localStorage.clear(); router.replace('/parent'); return }
+      if (meRes.status === 401) { localStorage.clear(); router.replace('/parent/login'); return }
       const [meData, childData, notifData] = await Promise.all([meRes.json(), childRes.json(), notifRes.json()])
       setParent(meData.parent)
       setChildren(childData.children || [])
@@ -79,7 +79,7 @@ export default function ParentDashboard() {
   const logout = () => {
     fetch(API + '/api/parent/auth/logout', { method: 'POST', headers: authHeaders() })
     localStorage.removeItem('parent_token'); localStorage.removeItem('parent_data')
-    router.replace('/parent')
+    router.replace('/parent/login')
   }
 
   const linkChild = async () => {
