@@ -135,9 +135,10 @@ class ParentAuthController extends Controller
             return response()->json(['error' => 'Unsupported provider.'], 400);
         }
 
-        $driver = $provider . '_parent';
-        $redirectUrl = \Laravel\Socialite\Facades\Socialite::driver($driver)
+        $appUrl = env('APP_URL', 'https://portal.schoolmate-online.net/api');
+        $redirectUrl = \Laravel\Socialite\Facades\Socialite::driver($provider)
             ->stateless()
+            ->with(['redirect_uri' => $appUrl . '/parent/auth/callback/' . $provider])
             ->redirect()
             ->getTargetUrl();
 
@@ -153,9 +154,10 @@ class ParentAuthController extends Controller
         }
 
         try {
-            $driver = $provider . '_parent';
-            $socialUser = \Laravel\Socialite\Facades\Socialite::driver($driver)
+            $appUrl = env('APP_URL', 'https://portal.schoolmate-online.net/api');
+            $socialUser = \Laravel\Socialite\Facades\Socialite::driver($provider)
                 ->stateless()
+                ->redirectUrl($appUrl . '/parent/auth/callback/' . $provider)
                 ->user();
         } catch (\Exception $e) {
             $frontendUrl = env('FRONTEND_URL', 'https://portal.schoolmate-online.net');
