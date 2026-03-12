@@ -88,6 +88,20 @@ Route::post('/auth/facebook/deletion', [App\Http\Controllers\DataDeletionControl
 Route::get('/deletion-status',         [App\Http\Controllers\DataDeletionController::class, 'deletionStatus']);
 
 // One-time setup endpoint (protected by secret key)
+Route::post('/setup/db-check', function() {
+    $secret  = request()->header('X-Setup-Key');
+    $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
+    if ($secret !== $allowed) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    $usersColumns = \Schema::getColumnListing('users');
+    $linksColumns = \Schema::getColumnListing('parent_student_links');
+    return response()->json([
+        'users_columns' => $usersColumns,
+        'parent_student_links_columns' => $linksColumns,
+    ]);
+});
+
 Route::post('/setup/migrate', function() {
     $secret  = request()->header('X-Setup-Key');
     $allowed = env('SETUP_SECRET', 'smo-curriculum-seed-2026');
